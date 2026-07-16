@@ -1,21 +1,3 @@
-"""LangChain memory tools backed by the Couchbase Agent Memory (`agentmemory`) SDK.
-
-This module exposes the Couchbase agent-memory operations as LangChain
-``StructuredTool`` objects so they can be bound to a chat model with
-``llm.bind_tools(...)`` and executed by an agent loop.
-
-Every tool is scoped to a single ``(user_id, session_id)`` pair — the model
-only supplies the *semantic* arguments (a query, the facts to remember, …) and
-never has to know or guess which user/session the data belongs to. The scoping
-is captured in the closures produced by :meth:`MemoryToolProvider.get_tools`.
-
-Each ``StructuredTool`` is built with both a synchronous ``func`` (driven by the
-sync :class:`AgentMemoryClient`) and an async ``coroutine`` (driven by the async
-:class:`AsyncAgentMemoryClient`). LangChain uses ``coroutine`` for ``ainvoke``
-and ``func`` for ``invoke``, so callers automatically use the SDK's async
-methods on the async path.
-"""
-
 from __future__ import annotations
 
 import logging
@@ -43,12 +25,6 @@ __all__ = [
     "AddWorkingMemoryArgs",
     "ListMemoriesArgs",
 ]
-
-
-# ============================ Tool argument schemas ============================
-# These describe the arguments the language model is allowed to provide. The
-# user/session scoping is injected by the provider and is deliberately *not*
-# part of any schema so the model cannot address another user's memories.
 
 
 class SearchMemoryArgs(BaseModel):
@@ -101,24 +77,7 @@ class ListMemoriesArgs(BaseModel):
     )
 
 
-# ================================ Tool provider ================================
-
-
 class MemoryToolProvider:
-    """Builds session-scoped LangChain tools over the Couchbase memory SDK.
-
-    A single provider owns one sync and one async client and can mint tool sets
-    for any number of ``(user_id, session_id)`` pairs via :meth:`get_tools`.
-
-    Parameters
-    ----------
-    base_url:
-        URL of the Couchbase Agent Memory server. Ignored when both
-        ``sync_client`` and ``async_client`` are supplied.
-    sync_client / async_client:
-        Pre-built clients to use instead of constructing new ones (handy for
-        tests or for sharing a client with the rest of the app).
-    """
 
     def __init__(
         self,
@@ -146,10 +105,7 @@ class MemoryToolProvider:
             verify=verify,
         )
 
-    # ---------------------------------------------------------------- scoping
-
     def _ensure_session_sync(self, user_id: str, session_id: str):
-        """Return a ``SessionResource``, creating the user/session as needed."""
         client = self._sync_client
         try:
             user = client.get_user(user_id)
@@ -167,7 +123,6 @@ class MemoryToolProvider:
                 return user.get_session(session_id)
 
     async def _ensure_session_async(self, user_id: str, session_id: str):
-        """Async counterpart of :meth:`_ensure_session_sync`."""
         client = self._async_client
         try:
             user = await client.get_user(user_id)
@@ -183,8 +138,6 @@ class MemoryToolProvider:
                 return await user.create_session(session_id)
             except ConflictError:
                 return await user.get_session(session_id)
-
-    # ------------------------------------------------------------- formatting
 
     @staticmethod
     def _format_block(block: MemoryBlock) -> str:
@@ -214,7 +167,6 @@ class MemoryToolProvider:
         *,
         limit: int = 200,
     ) -> list[dict[str, str]]:
-        """Return current-session chat turns in chronological order."""
         session = await self._ensure_session_async(user_id, session_id)
         result = await session.list_memories(limit=limit, order_by="ingested_at")
         blocks = sorted(result.memory_blocks, key=lambda block: block.ingested_at)
@@ -230,15 +182,8 @@ class MemoryToolProvider:
             )
         return history
 
-    # ------------------------------------------------------------------ tools
-
     def get_tools(self, user_id: str, session_id: str) -> list[StructuredTool]:
-        """Return the memory tools scoped to ``user_id`` / ``session_id``.
 
-        The returned list is safe to pass straight to ``llm.bind_tools(...)``.
-        """
-
-        # ---- search_memory ------------------------------------------------
         def _search(query: str, all_sessions: bool = False) -> str:
             filters: Optional[dict[str, Any]] = (
                 {"session_ids": "all"} if all_sessions else None
@@ -268,7 +213,6 @@ class MemoryToolProvider:
             args_schema=SearchMemoryArgs,
         )
 
-        # ---- store_memory -------------------------------------------------
         def _store(facts: list[str]) -> str:
             session = self._ensure_session_sync(user_id, session_id)
             resp = session.add_memory(facts=facts)
@@ -292,7 +236,6 @@ class MemoryToolProvider:
             args_schema=StoreMemoryArgs,
         )
 
-        # ---- add_working_memory ------------------------------------------
         def _add_working_memory(
             messages: list[WorkingMemoryMessage],
         ) -> str:
@@ -327,7 +270,6 @@ class MemoryToolProvider:
             args_schema=AddWorkingMemoryArgs,
         )
 
-        # ---- list_memories ------------------------------------------------
         def _list(limit: int = 10, all_sessions: bool = False) -> str:
             session = self._ensure_session_sync(user_id, session_id)
             session_ids = "all" if all_sessions else None
@@ -354,14 +296,10 @@ class MemoryToolProvider:
 
         return [search_tool, store_tool, add_working_memory_tool, list_tool]
 
-    # ----------------------------------------------------------------- close
-
     def close(self) -> None:
-        """Close the underlying synchronous client."""
         self._sync_client.close()
 
     async def aclose(self) -> None:
-        """Close the underlying asynchronous client."""
         await self._async_client.close()
 
 
@@ -374,11 +312,6 @@ def build_memory_tools(
     async_client: Optional[AsyncAgentMemoryClient] = None,
     **client_kwargs: Any,
 ) -> list[StructuredTool]:
-    """Convenience wrapper: build a provider and return its scoped tool list.
-
-    Prefer :class:`MemoryToolProvider` directly when you need to reuse the same
-    clients across many sessions or want to close them explicitly.
-    """
     provider = MemoryToolProvider(
         base_url=base_url,
         sync_client=sync_client,
