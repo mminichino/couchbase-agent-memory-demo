@@ -1,0 +1,49 @@
+replicaCount: 1
+
+image:
+  repository: "agentmemory"
+  tag: "1.0.0"
+  pullPolicy: IfNotPresent
+
+port: 8080
+
+model:
+  llm: "gpt-5.4"
+  embedding: "text-embedding-3-small"
+
+couchbase:
+  connectionString: "couchbase://couchbase.example.com"
+  username: "Administrator"
+  password: ""
+  bucket: "ams"
+  secretName: "couchbase-credentials"
+
+memory:
+  blockTtl: 0
+  extractSemantic: true
+  summaryTokenLimit: 700
+
+processing:
+  batchSize: 5
+  idleSleepSeconds: 0.2
+  maxConcurrentTasks: 100
+  maxRequestsPerMinute: 1500
+  maxTokensPerMinute: 125000
+  perRequestTokenLimit: 4096
+  queueMaxSize: 10000
+  maxFailCount: 3
+  taskTimeoutSeconds: 300
+
+openai:
+  secretName: openai-api-key-secret
+  key: ""
+
+externalSecret:
+  enabled: true
+  store:
+    kind: ClusterSecretStore
+    name: "secret-store"
+  keys:
+    openai: "openai-api-key"
+    couchbaseUsername: "couchbase-username"
+    couchbasePassword: "couchbase-password"

@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agent-memory-demo
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: agent-memory-demo
+  template:
+    metadata:
+      labels:
+        app: agent-memory-demo
+    spec:
+      containers:
+        - name: agent-memory-demo-api
+          image: "docker.io/mminichino/agent-memory-demo-api:{{ .Values.app.apiVersion }}"
+          imagePullPolicy: Always
+          env:
+            - name: AGENT_MEMORY_SERVER_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.url }}
+                  key: AGENT_MEMORY_SERVER_URL
+            - name: TAVILY_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.tavily }}
+                  key: TAVILY_API_KEY
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.openai }}
+                  key: OPENAI_API_KEY
+          ports:
+            - name: http
+              containerPort: 8088
+              protocol: TCP
+        - name: agent-memory-demo-web
+          image: "docker.io/mminichino/agent-memory-demo-web:{{ .Values.app.webVersion }}"
+          imagePullPolicy: Always
+          env:
+            - name: COUCHBASE_CONNECTION_STRING
+              value: {{ .Values.couchbase.connectionString | quote }}
+            - name: COUCHBASE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.couchbase.secretName }}
+                  key: COUCHBASE_USERNAME
+            - name: COUCHBASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.couchbase.secretName }}
+                  key: COUCHBASE_PASSWORD
+            - name: COUCHBASE_BUCKET
+              value: {{ .Values.couchbase.bucket | quote }}
+            - name: COUCHBASE_SCOPE
+              value: {{ .Values.couchbase.scope | quote }}
+            - name: COUCHBASE_COLLECTION
+              value: {{ .Values.couchbase.collection | quote }}
+            - name: CHAT_API_URL
+              value: "http://localhost:8088"
+            - name: ADMIN_USER
+              value: {{ .Values.app.username }}
+            - name: ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.password }}
+                  key: password
+          ports:
+            - name: http
+              containerPort: 3000
+              protocol: TCP

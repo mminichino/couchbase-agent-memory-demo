@@ -1,0 +1,59 @@
+#
+
+name: agent-memory-demo
+service: agent-memory-demo
+replicaCount: 1
+
+couchbase:
+  connectionString: "couchbase://couchbase.example.com"
+  username: "Administrator"
+  password: ""
+  bucket: "ams"
+  scope: "web"
+  collection: "session"
+  secretName: "couchbase-credentials"
+
+server:
+  service: "agent-memory-server"
+  namespace: ""
+  port: 8000
+
+keys:
+  openai: ""
+  tavily: ""
+
+secrets:
+  openai: "openai-api-key-demo-secret"
+  tavily: "tavily-api-key-demo-secret"
+  password: "agent-memory-demo-password"
+  url: "agent-memory-server-url"
+
+dns:
+  domain: ""
+
+ingress:
+  enabled: true
+  type: "haproxy"
+
+app:
+  username: "admin"
+  password: "password"
+  apiVersion: 0.3.0
+  webVersion: 0.1.1
+  couchbaseVersion: 8.0.2
+
+tls:
+  enabled: true
+  secretName: agent-memory-demo-tls
+
+externalSecret:
+  enabled: true
+  store:
+    kind: ClusterSecretStore
+    name: "secret-store"
+  keys:
+    openai: "openai-api-key"
+    tavily: "tavily-api-key"
+    password: "demo-ui-password"
+    couchbaseUsername: "couchbase-username"
+    couchbasePassword: "couchbase-password"

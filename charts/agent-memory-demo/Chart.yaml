@@ -1,0 +1,16 @@
+apiVersion: v2
+name: agent-memory-demo
+description: Couchbase Agent Memory Server Demo
+type: application
+version: 0.3.6
+appVersion: "0.3.0"
+keywords:
+  - agent
+  - memory
+  - couchbase
+home: https://github.com/mminichino/couchbase-agent-memory-demo
+sources:
+  - https://github.com/mminichino/couchbase-agent-memory-demo
+maintainers:
+  - name: Michael Minichino
+    url: https://github.com/mminichino/couchbase-agent-memory-demo

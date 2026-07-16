@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agent-memory-server
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: agent-memory-server
+  template:
+    metadata:
+      labels:
+        app: agent-memory-server
+    spec:
+      containers:
+        - name: agent-memory-server
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: AGENTMEMORY_CONN_STRING
+              value: {{ .Values.couchbase.connectionString | quote }}
+            - name: AGENTMEMORY_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.couchbase.secretName }}
+                  key: AGENTMEMORY_USERNAME
+            - name: AGENTMEMORY_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.couchbase.secretName }}
+                  key: AGENTMEMORY_PASSWORD
+            - name: AGENTMEMORY_BUCKET
+              value: {{ .Values.couchbase.bucket | quote }}
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.openai.secretName }}
+                  key: OPENAI_API_KEY
+            - name: AGENTMEMORY_MEMORY_BLOCK_TTL
+              value: {{ .Values.memory.blockTtl | quote }}
+            - name: AGENTMEMORY_EMBEDDING_MODEL
+              value: {{ .Values.model.embedding | quote }}
+            - name: AGENTMEMORY_LLM_MODEL
+              value: {{ .Values.model.llm | quote }}
+            - name: AGENTMEMORY_EXTRACT_SEMANTIC
+              value: {{ .Values.memory.extractSemantic | quote }}
+            - name: AGENTMEMORY_SUMMARY_TOKEN_LIMIT
+              value: {{ .Values.memory.summaryTokenLimit | quote }}
+            - name: AGENTMEMORY_PROCESSING_BATCH_SIZE
+              value: {{ .Values.processing.batchSize | quote }}
+            - name: AGENTMEMORY_IDLE_SLEEP_SECONDS
+              value: {{ .Values.processing.idleSleepSeconds | quote }}
+            - name: AGENTMEMORY_MAX_CONCURRENT_TASKS
+              value: {{ .Values.processing.maxConcurrentTasks | quote }}
+            - name: AGENTMEMORY_MAX_REQUESTS_PER_MINUTE
+              value: {{ .Values.processing.maxRequestsPerMinute | quote }}
+            - name: AGENTMEMORY_MAX_TOKENS_PER_MINUTE
+              value: {{ .Values.processing.maxTokensPerMinute | quote }}
+            - name: AGENTMEMORY_PER_REQUEST_TOKEN_LIMIT
+              value: {{ .Values.processing.perRequestTokenLimit | quote }}
+            - name: AGENTMEMORY_QUEUE_MAX_SIZE
+              value: {{ .Values.processing.queueMaxSize | quote }}
+            - name: AGENTMEMORY_MAX_FAIL_COUNT
+              value: {{ .Values.processing.maxFailCount | quote }}
+            - name: AGENTMEMORY_TASK_TIMEOUT_SECONDS
+              value: {{ .Values.processing.taskTimeoutSeconds | quote }}
+            - name: AGENTMEMORY_SERVER_HOST
+              value: "0.0.0.0"
+            - name: AGENTMEMORY_SERVER_PORT
+              value: {{ .Values.port | quote }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.port }}
+              protocol: TCP
