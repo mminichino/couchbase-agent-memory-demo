@@ -19,10 +19,11 @@ from langchain_core.messages import (
     ToolCall,
     ToolMessage,
 )
-from langchain_core.tools import StructuredTool
+from langchain_core.tools import BaseTool
 from langchain_openai import ChatOpenAI
 from tenacity import retry, stop_after_attempt, wait_fixed
 
+from memory_demo.mcp_tools import get_mcp_server_url, get_mcp_tools
 from memory_demo.memory_tools import MemoryToolProvider
 from memory_demo.web_search_tools import web_search_function
 
@@ -34,11 +35,14 @@ logging.getLogger("openai").setLevel(logging.WARNING)
 load_dotenv()
 
 SYSTEM_PROMPT = """
-You are a helpful assistant with access to Couchbase Agent Memory and web search.
+You are a helpful assistant with access to Couchbase Agent Memory, Couchbase data
+through an MCP server, and web search.
 
 Answer the user's question clearly and directly.
 
 Tool policy:
+- Retrieve flight schedules from the MCP server. Flight records are in the
+  `flights` collection in the `travel` bucket and `data` scope.
 - Use `web_search` for current, recent, live, or time-sensitive information.
 - Use `search_memory` when an answer may depend on a preference, fact, or prior
   conversation that the user previously shared.
@@ -54,6 +58,8 @@ Response style:
 - Be conversational and natural.
 - When the user shares information, acknowledge it without adding unsolicited advice.
 - State recalled information naturally rather than describing memory internals.
+- Respond to flight availability and schedule requests as a travel assistant.
+  Use stored travel preferences in memory if available to personalize the response.
 """
 
 MAX_TOOL_ITERATIONS = 10
@@ -64,13 +70,16 @@ class ChatWithMemory:
         self,
         smart_model: str = "gpt-5.4",
         ams_url: str = "http://localhost:8080",
+        mcp_server_url: str | None = None,
         enable_sync_methods: bool = True,
         smart_chat_model: BaseChatModel | None = None,
     ) -> None:
         self.error_count = 0
         self.smart_model = smart_model
         self.ams_url = ams_url
+        self.mcp_server_url = get_mcp_server_url(mcp_server_url)
         self._base_smart_llm = smart_chat_model or ChatOpenAI(model=smart_model)
+        self._mcp_tools: list[BaseTool] | None = None
         self.memory_client = MemoryToolProvider(
             base_url=ams_url,
             timeout=30.0,
@@ -99,15 +108,23 @@ class ChatWithMemory:
         self.error_count += 1
         logger.error(traceback.format_exc())
 
-    def _available_functions(
+    async def _available_functions(
         self,
         user_id: str,
         session_id: str,
-    ) -> list[StructuredTool]:
-        available_functions: list[StructuredTool] = self.memory_client.get_tools(
+    ) -> list[BaseTool]:
+        available_functions: list[BaseTool] = self.memory_client.get_tools(
             user_id,
             session_id,
         )
+        if self._mcp_tools is None:
+            self._mcp_tools = await get_mcp_tools(self.mcp_server_url)
+            logger.info(
+                "Loaded %d tools from MCP server %s.",
+                len(self._mcp_tools),
+                self.mcp_server_url,
+            )
+        available_functions.extend(self._mcp_tools)
         if os.getenv("TAVILY_API_KEY"):
             available_functions.append(web_search_function)
             logger.info("Tavily key present. Web search enabled.")
@@ -238,7 +255,7 @@ class ChatWithMemory:
     async def query_smart_llm(
         self,
         messages: list[BaseMessage],
-        available_functions: list[StructuredTool],
+        available_functions: list[BaseTool],
     ) -> AIMessage:
         llm = self._base_smart_llm.bind_tools(available_functions)
         response = await llm.ainvoke([SystemMessage(content=SYSTEM_PROMPT), *messages])
@@ -256,7 +273,7 @@ class ChatWithMemory:
         conversation = self.normalize_messages(context_messages)
         conversation.append(HumanMessage(content=message))
 
-        available_functions = self._available_functions(user_id, session_id)
+        available_functions = await self._available_functions(user_id, session_id)
         tools_by_name = {tool.name: tool for tool in available_functions}
 
         for iteration in range(1, MAX_TOOL_ITERATIONS + 1):

@@ -10,13 +10,17 @@ volumes:
 
 services:
   bootstrap:
-    image: mminichino/cbsbootstrap:0.4.0
+    image: mminichino/cbsbootstrap:0.5.0
+    container_name: couchbase-bootstrap
     environment:
       - CBS_NODES=127.0.0.1
       - CBS_ALTERNATE_ADDRESS=couchbase-demo
       - CBS_BUCKET=ams
       - CBS_SCOPE=web
       - CBS_COLLECTION=session
+      - CBS_IMPORT_KEYSPACE=travel.data.flights
+    volumes:
+      - ./data/flights.jsonl:/import/data.json
     networks:
       - agentmemory-network
     depends_on:
@@ -93,6 +97,25 @@ services:
       bootstrap:
         condition: service_completed_successfully
 
+  couchbase-mcp-server:
+    image: couchbase/mcp-server:1.0.0
+    container_name: mcp-server
+    ports:
+      - "9001:9001"
+    environment:
+      - CB_CONNECTION_STRING=couchbase://couchbase-demo
+      - CB_USERNAME=Administrator
+      - CB_PASSWORD=password
+      - CB_MCP_PORT=9001
+      - CB_MCP_HOST=0.0.0.0
+      - CB_MCP_TRANSPORT=http
+    restart: unless-stopped
+    networks:
+      - agentmemory-network
+    depends_on:
+      bootstrap:
+        condition: service_completed_successfully
+
   grpc-server:
     build:
       context: .
@@ -100,6 +123,7 @@ services:
     image: agent-memory-demo-service:latest
     container_name: agent-memory-demo-service
     environment:
+      - MCP_SERVER_URL=http://mcp-server:9001/mcp
       - AGENT_MEMORY_SERVER_URL=http://agentmemory-server:8080
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - TAVILY_API_KEY=${TAVILY_API_KEY}

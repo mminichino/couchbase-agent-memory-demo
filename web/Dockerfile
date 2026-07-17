@@ -30,6 +30,8 @@ COPY --from=builder /srv/web/public ./public
 # Standalone trace does not ship arbitrary project files; proto is loaded at runtime via readFileSync.
 COPY --from=builder --chown=nextjs:nodejs /srv/web/protos ./protos
 COPY --from=builder --chown=nextjs:nodejs /srv/web/.next/standalone ./
+# Next.js tracing omits Couchbase's platform-specific optional native package.
+COPY --from=builder --chown=nextjs:nodejs /srv/web/node_modules/@couchbase ./node_modules/@couchbase
 COPY --from=builder --chown=nextjs:nodejs /srv/web/.next/static ./.next/static
 
 USER nextjs

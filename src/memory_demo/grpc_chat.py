@@ -22,6 +22,7 @@ from langchain_core.messages import BaseMessage, message_to_dict
 from memory_demo import chat_service_pb2
 from memory_demo import chat_service_pb2_grpc
 from memory_demo.driver import ChatWithMemory
+from memory_demo.mcp_tools import DEFAULT_MCP_SERVER_URL
 
 logger = logging.getLogger()
 
@@ -61,15 +62,26 @@ class ChatGrpcServicer(chat_service_pb2_grpc.ChatServiceServicer):
 async def serve(port: int, chat: ChatWithMemory | None = None) -> None:
     load_dotenv()
     ams_url = os.getenv("AGENT_MEMORY_SERVER_URL", "http://localhost:8080")
+    mcp_server_url = os.getenv("MCP_SERVER_URL", DEFAULT_MCP_SERVER_URL)
     owns_chat = chat is None
-    chat = chat or ChatWithMemory(ams_url=ams_url, enable_sync_methods=False)
+    chat = chat or ChatWithMemory(
+        ams_url=ams_url,
+        mcp_server_url=mcp_server_url,
+        enable_sync_methods=False,
+    )
 
     server = grpc.aio.server()
     chat_service_pb2_grpc.add_ChatServiceServicer_to_server(ChatGrpcServicer(chat), server)
     listen = f"[::]:{port}"
     server.add_insecure_port(listen)
     await server.start()
-    logger.info(f"gRPC ChatService listening on {listen} (AGENT_MEMORY_SERVER_URL={ams_url})")
+    logger.info(
+        "gRPC ChatService listening on %s "
+        "(AGENT_MEMORY_SERVER_URL=%s, MCP_SERVER_URL=%s)",
+        listen,
+        ams_url,
+        mcp_server_url,
+    )
     try:
         await server.wait_for_termination()
     except KeyboardInterrupt:
