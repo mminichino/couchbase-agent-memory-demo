@@ -172,8 +172,5 @@ web/.next/
 web/.vercel/
 *.tsbuildinfo
 
-# uv lock file
-uv.lock
-
 # Misc
 README_AMS.md

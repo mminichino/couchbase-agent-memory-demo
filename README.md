@@ -23,12 +23,14 @@ You will need two API keys to run this demo:
     TAVILY_API_KEY=your_tavily_key_here
     ```
 
+3. Get and run Agent Memory Server container as `agentmemory:1.0.0`
+
 ### Run
 
 Start the demo by running:
 
 ```bash
-docker compose up -d
+docker compose up --build -d
 ```
 
 Once the containers are running, you can access the demo in your browser at `http://localhost:8080`.
