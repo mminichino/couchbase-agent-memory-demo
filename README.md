@@ -23,7 +23,11 @@ You will need two API keys to run this demo:
     TAVILY_API_KEY=your_tavily_key_here
     ```
 
-3. Get and run Agent Memory Server container as `agentmemory:1.0.0`
+3. Get and run Agent Memory Server container
+
+   ```shell
+   docker load -i agentmemory-server-arm64-v1.0.0.tar
+   ```
 
 ### Run
 
