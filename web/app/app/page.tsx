@@ -15,7 +15,6 @@ export default async function AppPage() {
       <ChatWorkspace
         userId={user.user_id}
         sessionId={sessionId}
-        showToolResponses={user.settings.show_tool_responses}
       />
     </AppShell>
   );

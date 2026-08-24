@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x12\x63hat_service.proto\x12\x13memory_demo.chat.v1\"K\n\x13ProcessInputRequest\x12\x0f\n\x07\x63ontent\x18\x01 \x01(\t\x12\x12\n\nsession_id\x18\x02 \x01(\t\x12\x0f\n\x07user_id\x18\x03 \x01(\t\"(\n\x10\x42\x61seMessageChunk\x12\x14\n\x0cmessage_json\x18\x01 \x01(\t2p\n\x0b\x43hatService\x12\x61\n\x0cProcessInput\x12(.memory_demo.chat.v1.ProcessInputRequest\x1a%.memory_demo.chat.v1.BaseMessageChunk0\x01\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x12\x63hat_service.proto\x12\x13memory_demo.chat.v1\"K\n\x13ProcessInputRequest\x12\x0f\n\x07\x63ontent\x18\x01 \x01(\t\x12\x12\n\nsession_id\x18\x02 \x01(\t\x12\x0f\n\x07user_id\x18\x03 \x01(\t\"<\n\x10\x42\x61seMessageChunk\x12\x14\n\x0cmessage_json\x18\x01 \x01(\t\x12\x12\n\naudit_json\x18\x02 \x01(\t2p\n\x0b\x43hatService\x12\x61\n\x0cProcessInput\x12(.memory_demo.chat.v1.ProcessInputRequest\x1a%.memory_demo.chat.v1.BaseMessageChunk0\x01\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -34,7 +34,7 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_PROCESSINPUTREQUEST']._serialized_start=43
   _globals['_PROCESSINPUTREQUEST']._serialized_end=118
   _globals['_BASEMESSAGECHUNK']._serialized_start=120
-  _globals['_BASEMESSAGECHUNK']._serialized_end=160
-  _globals['_CHATSERVICE']._serialized_start=162
-  _globals['_CHATSERVICE']._serialized_end=274
+  _globals['_BASEMESSAGECHUNK']._serialized_end=180
+  _globals['_CHATSERVICE']._serialized_start=182
+  _globals['_CHATSERVICE']._serialized_end=294
 # @@protoc_insertion_point(module_scope)

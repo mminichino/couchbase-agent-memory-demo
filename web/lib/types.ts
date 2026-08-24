@@ -47,5 +47,17 @@ export type ChatEvent =
       runtime_ms: number;
       content: string;
     }
+  | {
+      type: "audit";
+      event_type: string;
+      title: string;
+      summary: string;
+      status: string;
+      duration_ms?: number;
+      tool_call_id?: string;
+      timestamp: number;
+    }
   | { type: "error"; message: string }
   | { type: "done" };
+
+export type AuditEvent = Extract<ChatEvent, { type: "audit" }>;

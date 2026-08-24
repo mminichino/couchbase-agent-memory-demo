@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import json
 import logging
 import os
@@ -34,29 +35,83 @@ def _base_message_to_json(msg: BaseMessage) -> str:
 
 
 class ChatGrpcServicer(chat_service_pb2_grpc.ChatServiceServicer):
-    def __init__(self, chat: ChatWithMemory) -> None:
-        self._chat = chat
+    def __init__(self, chat_factory) -> None:
+        self._chat_factory = chat_factory
 
     async def ProcessInput(
         self,
         request: chat_service_pb2.ProcessInputRequest, # noqa
         context: grpc.aio.ServicerContext,
     ) -> AsyncIterator[chat_service_pb2.BaseMessageChunk]: # noqa
+        audit_queue: asyncio.Queue[dict | None] = asyncio.Queue()
+
+        async def on_audit(event: dict) -> None:
+            await audit_queue.put(event)
+
+        chat = self._chat_factory(on_audit=on_audit)
+        owns_chat = True
+
+        async def run_chat() -> None:
+            try:
+                async for msg in chat.process_input_async(
+                    request.content,
+                    request.session_id,
+                    request.user_id,
+                ):
+                    if not isinstance(msg, BaseMessage):
+                        continue
+                    await audit_queue.put(
+                        {
+                            "__message__": chat_service_pb2.BaseMessageChunk(
+                                message_json=_base_message_to_json(msg)
+                            )
+                        }
+                    )
+            except Exception as e:
+                logger.error(f"ProcessInput failed: {e}")
+                await audit_queue.put({"__error__": str(e)})
+            finally:
+                await audit_queue.put(None)
+                if owns_chat:
+                    await chat.aclose()
+
+        worker = asyncio.create_task(run_chat())
+
         try:
-            logger.info(f"ProcessInput: user: {request.user_id} session: {request.session_id}")
-            async for msg in self._chat.process_input_async(
-                request.content,
-                request.session_id,
-                request.user_id,
-            ):
-                if not isinstance(msg, BaseMessage):
+            while True:
+                item = await audit_queue.get()
+                if item is None:
+                    break
+                if "__error__" in item:
+                    await context.abort(grpc.StatusCode.INTERNAL, item["__error__"])
+                    return
+                if "__message__" in item:
+                    yield item["__message__"]
                     continue
-                yield chat_service_pb2.BaseMessageChunk( # noqa
-                    message_json=_base_message_to_json(msg)
+                yield chat_service_pb2.BaseMessageChunk(
+                    audit_json=json.dumps(item, ensure_ascii=False, default=str)
                 )
-        except Exception as e:
-            logger.error(f"ProcessInput failed: {e}")
-            await context.abort(grpc.StatusCode.INTERNAL, str(e))
+        finally:
+            if not worker.done():
+                worker.cancel()
+                with contextlib.suppress(asyncio.CancelledError):
+                    await worker
+
+
+class _SharedChatFactory:
+    def __init__(self, chat: ChatWithMemory) -> None:
+        self._chat = chat
+
+    def __call__(self, on_audit=None) -> ChatWithMemory:
+        if on_audit is None:
+            return self._chat
+        return ChatWithMemory(
+            ams_url=self._chat.ams_url,
+            mcp_server_url=self._chat.mcp_server_url,
+            enable_sync_methods=False,
+            smart_model=self._chat.smart_model,
+            on_audit=on_audit,
+        )
 
 
 async def serve(port: int, chat: ChatWithMemory | None = None) -> None:
@@ -69,9 +124,13 @@ async def serve(port: int, chat: ChatWithMemory | None = None) -> None:
         mcp_server_url=mcp_server_url,
         enable_sync_methods=False,
     )
+    factory = _SharedChatFactory(chat)
 
     server = grpc.aio.server()
-    chat_service_pb2_grpc.add_ChatServiceServicer_to_server(ChatGrpcServicer(chat), server)
+    chat_service_pb2_grpc.add_ChatServiceServicer_to_server(
+        ChatGrpcServicer(factory),
+        server,
+    )
     listen = f"[::]:{port}"
     server.add_insecure_port(listen)
     await server.start()

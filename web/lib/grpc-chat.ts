@@ -28,7 +28,8 @@ type ProcessInputPayload = {
 };
 
 type ChunkData = {
-  message_json: string;
+  message_json?: string;
+  audit_json?: string;
 };
 
 type ChatClient = {
