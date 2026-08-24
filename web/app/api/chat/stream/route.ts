@@ -70,6 +70,38 @@ export async function POST(request: Request) {
 
       const call = streamChat(parsed.data);
       call.on("data", (chunk) => {
+        if (chunk.audit_json) {
+          try {
+            const audit = JSON.parse(chunk.audit_json) as Record<string, unknown>;
+            emit({
+              type: "audit",
+              event_type: String(audit.event_type ?? "audit"),
+              title: String(audit.title ?? "Agent activity"),
+              summary: String(audit.summary ?? ""),
+              status: String(audit.status ?? "info"),
+              duration_ms:
+                typeof audit.duration_ms === "number" ? audit.duration_ms : undefined,
+              tool_call_id:
+                typeof audit.tool_call_id === "string" ? audit.tool_call_id : undefined,
+              timestamp: Date.now()
+            });
+          } catch {
+            emit({
+              type: "audit",
+              event_type: "audit",
+              title: "Agent Catalog",
+              summary: chunk.audit_json,
+              status: "info",
+              timestamp: Date.now()
+            });
+          }
+          return;
+        }
+
+        if (!chunk.message_json) {
+          return;
+        }
+
         let parsedMsg: LangChainMessage | null = null;
         try {
           parsedMsg = JSON.parse(chunk.message_json) as LangChainMessage;

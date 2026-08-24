@@ -7,6 +7,7 @@ volumes:
   agentmemory-prometheus:
   agentmemory-couchbase:
   agentmemory-web:
+  agent-catalog-state:
 
 services:
   bootstrap:
@@ -43,6 +44,31 @@ services:
     networks:
       - agentmemory-network
     restart: unless-stopped
+
+  catalog-bootstrap:
+    build:
+      context: .
+      dockerfile: Dockerfile.catalog
+    image: agent-catalog-bootstrap:latest
+    container_name: agent-catalog-bootstrap
+    environment:
+      - AGENT_CATALOG_CONN_STRING=couchbase://couchbase-demo
+      - AGENT_CATALOG_USERNAME=Administrator
+      - AGENT_CATALOG_PASSWORD=password
+      - AGENT_CATALOG_BUCKET=ams
+      - AGENT_CATALOG_STATE_DIR=/workspace/agentc-state
+      - AGENT_CATALOG_INTERACTIVE=False
+      - CB_CONN_STRING=couchbase://couchbase-demo
+      - CB_USERNAME=Administrator
+      - CB_PASSWORD=password
+    volumes:
+      - agent-catalog-state:/workspace/agentc-state
+    networks:
+      - agentmemory-network
+    depends_on:
+      bootstrap:
+        condition: service_completed_successfully
+    restart: "no"
 
   couchbase-agentmemory-server:
     image: agentmemory-server:v1.0.0
@@ -127,8 +153,22 @@ services:
       - AGENT_MEMORY_SERVER_URL=http://agentmemory-server:8080
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - TAVILY_API_KEY=${TAVILY_API_KEY}
+      - AGENT_CATALOG_CONN_STRING=couchbase://couchbase-demo
+      - AGENT_CATALOG_USERNAME=Administrator
+      - AGENT_CATALOG_PASSWORD=password
+      - AGENT_CATALOG_BUCKET=ams
+      - AGENT_CATALOG_CATALOG_PATH=/app/agentc-state/.agent-catalog
+      - AGENT_CATALOG_ACTIVITY_PATH=/app/agentc-state/.agent-activity
+      - CB_CONN_STRING=couchbase://couchbase-demo
+      - CB_USERNAME=Administrator
+      - CB_PASSWORD=password
+    volumes:
+      - agent-catalog-state:/app/agentc-state
     depends_on:
-      - couchbase-agentmemory-server
+      catalog-bootstrap:
+        condition: service_completed_successfully
+      couchbase-agentmemory-server:
+        condition: service_started
     ports:
       - "8088:8088"
     restart: unless-stopped

@@ -172,5 +172,10 @@ web/.next/
 web/.vercel/
 *.tsbuildinfo
 
+# Agent Catalog generated state
+.agent-catalog/
+.agent-activity/
+.model-cache/
+
 # Misc
 README_AMS.md

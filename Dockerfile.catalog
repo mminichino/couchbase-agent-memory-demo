@@ -1,0 +1,26 @@
+FROM python:3.12-slim-bookworm
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends git ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
+WORKDIR /workspace
+
+ENV UV_COMPILE_BYTECODE=1
+ENV HF_HOME=/opt/huggingface
+ENV SENTENCE_TRANSFORMERS_HOME=/opt/huggingface
+
+# Use a standalone bootstrap project so uv does not try to build the demo package.
+COPY catalog-bootstrap/pyproject.toml ./pyproject.toml
+RUN uv sync --no-dev --no-install-project
+
+COPY catalog/ ./catalog/
+COPY scripts/catalog-bootstrap.sh ./scripts/catalog-bootstrap.sh
+RUN chmod +x ./scripts/catalog-bootstrap.sh
+
+# Pre-download the default Agent Catalog embedding model for offline indexing.
+RUN uv run python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('sentence-transformers/all-MiniLM-L12-v2')"
+
+ENTRYPOINT ["./scripts/catalog-bootstrap.sh"]

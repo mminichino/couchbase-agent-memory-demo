@@ -1,0 +1,29 @@
+/*
+name: flights_by_route
+description: >
+  Find flight schedules between two airports on a given weekday from the demo flights dataset.
+input:
+  type: object
+  properties:
+    origin:
+      type: string
+      description: IATA origin airport code (e.g. ATL)
+    destination:
+      type: string
+      description: IATA destination airport code (e.g. DFW)
+    weekday:
+      type: string
+      description: Operating weekday name (e.g. Monday)
+  required: [origin, destination, weekday]
+secrets:
+  - couchbase:
+      conn_string: CB_CONN_STRING
+      username: CB_USERNAME
+      password: CB_PASSWORD
+*/
+SELECT carrier_name, flight_number, departure_time_local, arrival_time_local, duration_minutes, operating_weekday
+FROM `travel`.`data`.`flights` AS f
+WHERE f.origin = $origin
+  AND f.destination = $destination
+  AND f.operating_weekday = $weekday
+LIMIT 10;

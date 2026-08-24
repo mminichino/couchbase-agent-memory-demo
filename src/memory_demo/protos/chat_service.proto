@@ -14,4 +14,5 @@ message ProcessInputRequest {
 
 message BaseMessageChunk {
   string message_json = 1;
+  string audit_json = 2;
 }

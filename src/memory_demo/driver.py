@@ -9,6 +9,8 @@ import traceback
 from asyncio import AbstractEventLoop
 from typing import Any, AsyncGenerator, Generator, Sequence
 
+from agentc_core.activity.models.content import AssistantContent, UserContent
+from agentc_langchain.chat import Callback as AgentCatalogCallback
 from dotenv import load_dotenv
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import (
@@ -23,6 +25,15 @@ from langchain_core.tools import BaseTool
 from langchain_openai import ChatOpenAI
 from tenacity import retry, stop_after_attempt, wait_fixed
 
+from memory_demo.catalog_client import (
+    AuditCallback,
+    build_catalog,
+    load_catalog_tools,
+    load_system_prompt,
+    log_tool_call,
+    log_tool_result,
+    turn_span_for,
+)
 from memory_demo.mcp_tools import get_mcp_server_url, get_mcp_tools
 from memory_demo.memory_tools import MemoryToolProvider
 from memory_demo.web_search_tools import web_search_function
@@ -33,34 +44,6 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 logging.getLogger("openai").setLevel(logging.WARNING)
 
 load_dotenv()
-
-SYSTEM_PROMPT = """
-You are a helpful assistant with access to Couchbase Agent Memory, Couchbase data
-through an MCP server, and web search.
-
-Answer the user's question clearly and directly.
-
-Tool policy:
-- Retrieve flight schedules from the MCP server. Flight records are in the
-  `flights` collection in the `travel` bucket and `data` scope.
-- Use `web_search` for current, recent, live, or time-sensitive information.
-- Use `search_memory` when an answer may depend on a preference, fact, or prior
-  conversation that the user previously shared.
-- Use `store_memory` for durable preferences, stable traits, and important
-  facts that should be available in future sessions.
-- Do not store trivial or temporary details as durable facts.
-- Completed chat turns are automatically written to the current session by the
-  application. Do not call `add_working_memory` yourself.
-- Prefer a tool call over guessing when external or stored information is needed.
-
-Response style:
-- Answer the user's actual question first.
-- Be conversational and natural.
-- When the user shares information, acknowledge it without adding unsolicited advice.
-- State recalled information naturally rather than describing memory internals.
-- Respond to flight availability and schedule requests as a travel assistant.
-  Use stored travel preferences in memory if available to personalize the response.
-"""
 
 MAX_TOOL_ITERATIONS = 10
 
@@ -73,6 +56,7 @@ class ChatWithMemory:
         mcp_server_url: str | None = None,
         enable_sync_methods: bool = True,
         smart_chat_model: BaseChatModel | None = None,
+        on_audit: AuditCallback | None = None,
     ) -> None:
         self.error_count = 0
         self.smart_model = smart_model
@@ -80,6 +64,10 @@ class ChatWithMemory:
         self.mcp_server_url = get_mcp_server_url(mcp_server_url)
         self._base_smart_llm = smart_chat_model or ChatOpenAI(model=smart_model)
         self._mcp_tools: list[BaseTool] | None = None
+        self._catalog_tools: list[BaseTool] | None = None
+        self._system_prompt: str | None = None
+        self._on_audit = on_audit
+        self._catalog = build_catalog()
         self.memory_client = MemoryToolProvider(
             base_url=ams_url,
             timeout=30.0,
@@ -93,6 +81,19 @@ class ChatWithMemory:
             except RuntimeError:
                 self.loop = asyncio.new_event_loop()
                 asyncio.set_event_loop(self.loop)
+
+    async def _emit_audit_async(self, event: dict[str, Any]) -> None:
+        if self._on_audit is None:
+            return
+        result = self._on_audit(event)
+        if asyncio.iscoroutine(result):
+            await result
+
+    def _get_system_prompt(self) -> str:
+        if self._system_prompt is None:
+            self._system_prompt = load_system_prompt(self._catalog)
+            logger.info("Loaded system prompt from Agent Catalog.")
+        return self._system_prompt
 
     def event_loop(self) -> AbstractEventLoop:
         if self.loop is None:
@@ -117,6 +118,10 @@ class ChatWithMemory:
             user_id,
             session_id,
         )
+        if self._catalog_tools is None:
+            self._catalog_tools = load_catalog_tools(self._catalog)
+            logger.info("Loaded %d tools from Agent Catalog.", len(self._catalog_tools))
+        available_functions.extend(self._catalog_tools)
         if self._mcp_tools is None:
             self._mcp_tools = await get_mcp_tools(self.mcp_server_url)
             logger.info(
@@ -256,9 +261,15 @@ class ChatWithMemory:
         self,
         messages: list[BaseMessage],
         available_functions: list[BaseTool],
+        agent_span: Any,
     ) -> AIMessage:
         llm = self._base_smart_llm.bind_tools(available_functions)
-        response = await llm.ainvoke([SystemMessage(content=SYSTEM_PROMPT), *messages])
+        if self._catalog is not None:
+            callback = AgentCatalogCallback(span=agent_span, tools=available_functions)
+            llm = llm.with_config(callbacks=[callback])
+        response = await llm.ainvoke(
+            [SystemMessage(content=self._get_system_prompt()), *messages]
+        )
         if not isinstance(response, AIMessage):
             return AIMessage(content=getattr(response, "content", str(response)))
         return response
@@ -269,80 +280,125 @@ class ChatWithMemory:
         user_id: str,
         context_messages: Sequence[dict[str, Any] | BaseMessage],
         message: str,
+        turn_span: Any,
     ) -> AsyncGenerator[BaseMessage]:
         conversation = self.normalize_messages(context_messages)
         conversation.append(HumanMessage(content=message))
 
         available_functions = await self._available_functions(user_id, session_id)
         tools_by_name = {tool.name: tool for tool in available_functions}
+        agent_span = turn_span.new(name="travel_assistant")
+        agent_span.enter()
+        agent_span.log(UserContent(value=message))
 
-        for iteration in range(1, MAX_TOOL_ITERATIONS + 1):
-            logger.info(
-                "Generate: %s (%s), tool iteration %d",
-                user_id,
-                session_id,
-                iteration,
-            )
-            response = await self.query_smart_llm(
-                conversation,
-                available_functions,
-            )
-            tool_calls = self._tool_calls_from_ai_message(response)
-            if not tool_calls:
-                text = self._assistant_content_str(response)
-                if text:
-                    working_memory_tool = tools_by_name["add_working_memory"]
-                    await working_memory_tool.ainvoke(
+        try:
+            for iteration in range(1, MAX_TOOL_ITERATIONS + 1):
+                logger.info(
+                    "Generate: %s (%s), tool iteration %d",
+                    user_id,
+                    session_id,
+                    iteration,
+                )
+                response = await self.query_smart_llm(
+                    conversation,
+                    available_functions,
+                    agent_span,
+                )
+                tool_calls = self._tool_calls_from_ai_message(response)
+                if not tool_calls:
+                    text = self._assistant_content_str(response)
+                    if text:
+                        working_memory_tool = tools_by_name["add_working_memory"]
+                        await working_memory_tool.ainvoke(
+                            {
+                                "messages": [
+                                    {
+                                        "user_content": message,
+                                        "assistant_content": text,
+                                    }
+                                ]
+                            }
+                        )
+                        agent_span.log(AssistantContent(value=text))
+                    yield AIMessage(content=text)
+                    return
+
+                conversation.append(response)
+                for tool_call in tool_calls:
+                    name = tool_call.get("name") or ""
+                    args = self._tool_call_args_as_dict(tool_call.get("args"))
+                    tool_call_id = tool_call.get("id") or f"tool_call_{iteration}"
+                    tool = tools_by_name.get(name)
+                    started_at = time.monotonic()
+                    status = "success"
+
+                    await self._emit_audit_async(
                         {
-                            "messages": [
-                                {
-                                    "user_content": message,
-                                    "assistant_content": text,
-                                }
-                            ]
+                            "event_type": "tool_call",
+                            "title": name,
+                            "summary": json.dumps(args, ensure_ascii=False, default=str),
+                            "status": "running",
+                            "tool_call_id": tool_call_id,
                         }
                     )
-                yield AIMessage(content=text)
-                return
+                    log_tool_call(
+                        agent_span,
+                        name=name,
+                        args=args,
+                        tool_call_id=tool_call_id,
+                    )
 
-            conversation.append(response)
-            for tool_call in tool_calls:
-                name = tool_call.get("name") or ""
-                args = self._tool_call_args_as_dict(tool_call.get("args"))
-                tool_call_id = tool_call.get("id") or f"tool_call_{iteration}"
-                tool = tools_by_name.get(name)
-                started_at = time.monotonic()
-                status = "success"
-
-                if tool is None:
-                    status = "error"
-                    content = f"Unknown tool: {name}"
-                else:
-                    try:
-                        logger.info("Calling tool: %s", name)
-                        result = await tool.ainvoke(args)
-                        content = self._tool_result_content(result)
-                    except Exception as exc:
-                        self.increment_error_count()
-                        logger.exception("Tool '%s' failed", name)
+                    if tool is None:
                         status = "error"
-                        content = f"Error calling tool '{name}': {exc}"
+                        content = f"Unknown tool: {name}"
+                    else:
+                        try:
+                            logger.info("Calling tool: %s", name)
+                            result = await tool.ainvoke(args)
+                            content = self._tool_result_content(result)
+                        except Exception as exc:
+                            self.increment_error_count()
+                            logger.exception("Tool '%s' failed", name)
+                            status = "error"
+                            content = f"Error calling tool '{name}': {exc}"
 
-                tool_message = ToolMessage(
-                    content=content,
-                    tool_call_id=tool_call_id,
-                    name=name,
-                    status=status,
-                    response_metadata={
-                        "execution_time_seconds": time.monotonic() - started_at
-                    },
-                )
-                conversation.append(tool_message)
-                yield tool_message
+                    duration_ms = (time.monotonic() - started_at) * 1000
+                    await self._emit_audit_async(
+                        {
+                            "event_type": "tool_result",
+                            "title": name,
+                            "summary": content[:500],
+                            "status": status,
+                            "duration_ms": duration_ms,
+                            "tool_call_id": tool_call_id,
+                        }
+                    )
+                    log_tool_result(
+                        agent_span,
+                        name=name,
+                        result=content,
+                        tool_call_id=tool_call_id,
+                        status=status,
+                        duration_ms=duration_ms,
+                    )
 
-        raise RuntimeError(
-            f"Model exceeded the maximum of {MAX_TOOL_ITERATIONS} tool iterations."
-        )
+                    tool_message = ToolMessage(
+                        content=content,
+                        tool_call_id=tool_call_id,
+                        name=name,
+                        status=status,
+                        response_metadata={
+                            "execution_time_seconds": duration_ms / 1000
+                        },
+                    )
+                    conversation.append(tool_message)
+                    yield tool_message
+
+            raise RuntimeError(
+                f"Model exceeded the maximum of {MAX_TOOL_ITERATIONS} tool iterations."
+            )
+        finally:
+            agent_span.exit()
 
     async def process_input_async(
         self,
@@ -356,6 +412,17 @@ class ChatWithMemory:
             session_id,
             content,
         )
+        turn_span = turn_span_for(self._catalog, session_id)
+        if self._catalog is not None:
+            turn_span.enter()
+        await self._emit_audit_async(
+            {
+                "event_type": "turn_start",
+                "title": "Agent turn",
+                "summary": content,
+                "status": "running",
+            }
+        )
         try:
             context_messages = await self.memory_client.get_chat_history(
                 user_id,
@@ -366,14 +433,34 @@ class ChatWithMemory:
                 user_id,
                 context_messages,
                 content,
+                turn_span,
             ):
                 yield response
+            await self._emit_audit_async(
+                {
+                    "event_type": "turn_complete",
+                    "title": "Agent turn",
+                    "summary": "Response completed.",
+                    "status": "success",
+                }
+            )
         except Exception as exc:
             self.increment_error_count()
             logger.exception("Error processing user input: %s", exc)
+            await self._emit_audit_async(
+                {
+                    "event_type": "turn_error",
+                    "title": "Agent turn",
+                    "summary": str(exc),
+                    "status": "error",
+                }
+            )
             yield AIMessage(
                 content="I'm sorry, I encountered an error processing your request."
             )
+        finally:
+            if self._catalog is not None:
+                turn_span.exit()
 
     def process_input(
         self,
