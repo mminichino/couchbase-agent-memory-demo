@@ -1,7 +1,18 @@
 API_VERSION := $(shell sed -n 's/^__version__ = "\([^"]*\)"/\1/p' src/memory_demo/__init__.py)
 WEB_VERSION := $(shell python3 -c "import json; print(json.load(open('web/package.json'))['version'])")
 
-.PHONY: docker-api docker-web docker-api-tag docker-web-tag docker-api-push docker-web-push
+.PHONY: docker-api docker-web docker-api-tag docker-web-tag docker-api-push docker-web-push \
+	container-build run stop
+
+container-build:
+	-docker compose rm -sf catalog-bootstrap grpc-server web-server
+	docker compose build catalog-bootstrap grpc-server web-server
+
+run:
+	docker compose up -d
+
+stop:
+	docker compose down
 
 docker-api:
 	docker buildx build --platform linux/amd64,linux/arm64 --no-cache -t agent-memory-demo-api:$(API_VERSION) -f Dockerfile.grpc . --load
