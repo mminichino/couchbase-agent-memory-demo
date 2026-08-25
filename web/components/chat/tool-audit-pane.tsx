@@ -48,7 +48,7 @@ export function ToolAuditPane({ events, isStreaming }: ToolAuditPaneProps) {
           <p className="text-[11px] uppercase tracking-[0.18em] text-muted">Agent Catalog</p>
           <h2 className="mt-1 text-sm font-semibold text-foreground">Tool audit stream</h2>
           <p className="mt-1 text-xs text-muted">
-            Live tool calls, results, and turn events traced through Couchbase Agent Catalog.
+            Live tool calls and results traced through Agent Catalog
           </p>
         </div>
 

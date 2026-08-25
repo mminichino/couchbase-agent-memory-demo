@@ -16,7 +16,7 @@ export function AppShell({ user, children }: AppShellProps) {
           <div className="min-w-0 flex-1">
             <p className="text-xs uppercase tracking-wide text-muted">Couchbase AI Data Plane</p>
             <h1 className="text-sm font-semibold text-foreground">
-              Agent Memory + Catalog Console
+              Agent Memory + MCP + Agent Catalog
             </h1>
           </div>
           <AppShellStatus />
