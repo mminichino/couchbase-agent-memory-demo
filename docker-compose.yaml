@@ -58,6 +58,9 @@ services:
       - AGENT_CATALOG_BUCKET=ams
       - AGENT_CATALOG_STATE_DIR=/workspace/agentc-state
       - AGENT_CATALOG_INTERACTIVE=False
+      - CATALOG_GIT_URL=${CATALOG_GIT_URL:-https://github.com/mminichino/couchbase-agent-memory-demo.git}
+      - CATALOG_GIT_REF=${CATALOG_GIT_REF:-main}
+      - CATALOG_GIT_TOKEN=${CATALOG_GIT_TOKEN:-}
       - CB_CONN_STRING=couchbase://couchbase-demo
       - CB_USERNAME=Administrator
       - CB_PASSWORD=password

@@ -12,11 +12,11 @@ ENV UV_COMPILE_BYTECODE=1
 ENV HF_HOME=/opt/huggingface
 ENV SENTENCE_TRANSFORMERS_HOME=/opt/huggingface
 
-# Use a standalone bootstrap project so uv does not try to build the demo package.
+# Standalone uv project so the image does not build the demo package.
+# Catalog source files are cloned from GitHub at container start (see scripts/catalog-bootstrap.sh).
 COPY catalog-bootstrap/pyproject.toml ./pyproject.toml
 RUN uv sync --no-dev --no-install-project
 
-COPY catalog/ ./catalog/
 COPY scripts/catalog-bootstrap.sh ./scripts/catalog-bootstrap.sh
 RUN chmod +x ./scripts/catalog-bootstrap.sh
 

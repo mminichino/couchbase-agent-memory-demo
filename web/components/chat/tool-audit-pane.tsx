@@ -42,13 +42,16 @@ export function ToolAuditPane({ events, isStreaming }: ToolAuditPaneProps) {
   }, [events, isStreaming]);
 
   return (
-    <aside className="flex min-h-0 w-full flex-col lg:max-w-sm lg:flex-none lg:basis-80 xl:basis-96">
+    <aside
+      id="tool-audit-stream"
+      className="flex min-h-0 w-full flex-col lg:max-w-sm lg:flex-none lg:basis-80 xl:basis-96"
+    >
       <Card className="flex min-h-0 flex-1 flex-col overflow-hidden border-border/80 bg-panel/70 shadow-panel backdrop-blur-sm">
         <div className="border-b border-border/80 px-4 py-3">
           <p className="text-[11px] uppercase tracking-[0.18em] text-muted">Agent Catalog</p>
           <h2 className="mt-1 text-sm font-semibold text-foreground">Tool audit stream</h2>
           <p className="mt-1 text-xs text-muted">
-            Live tool calls, results, and turn events traced through Couchbase Agent Catalog.
+            Live tool calls and results traced through Agent Catalog
           </p>
         </div>
 

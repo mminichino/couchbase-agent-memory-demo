@@ -6,6 +6,7 @@ import { ChatComposer } from "@/components/chat/chat-composer";
 import { ChatThread } from "@/components/chat/chat-thread";
 import { ToolAuditPane } from "@/components/chat/tool-audit-pane";
 import type { AuditEvent, ChatEvent } from "@/lib/types";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
 type WorkspaceProps = {
@@ -55,6 +56,7 @@ function toAuditEvents(events: ChatEvent[]): AuditEvent[] {
 export function ChatWorkspace({ userId, sessionId }: WorkspaceProps) {
   const [events, setEvents] = useState<ChatEvent[]>([]);
   const [isStreaming, setStreaming] = useState(false);
+  const [showAuditPane, setShowAuditPane] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const auditEvents = useMemo(() => toAuditEvents(events), [events]);
@@ -142,7 +144,19 @@ export function ChatWorkspace({ userId, sessionId }: WorkspaceProps) {
     <section className="flex min-h-0 flex-1 flex-col gap-4">
       <div className="mx-auto w-full max-w-6xl shrink-0">
         <Card className="p-4">
-          <h3 className="text-sm font-semibold text-foreground">Session details</h3>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <h3 className="text-sm font-semibold text-foreground">Session details</h3>
+            <Button
+              type="button"
+              variant="secondary"
+              className="h-8 px-3 text-xs"
+              aria-pressed={showAuditPane}
+              aria-controls="tool-audit-stream"
+              onClick={() => setShowAuditPane((open) => !open)}
+            >
+              {showAuditPane ? "Hide tool audit" : "Show tool audit"}
+            </Button>
+          </div>
           <div className="mt-3 grid gap-2 text-xs text-muted sm:grid-cols-2">
             <div className="rounded-md border border-border bg-panelMuted/60 px-3 py-2">
               <p className="text-[11px] uppercase tracking-wide text-muted">User ID</p>
@@ -157,7 +171,9 @@ export function ChatWorkspace({ userId, sessionId }: WorkspaceProps) {
       </div>
 
       <div className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col gap-4 lg:flex-row">
-        <ToolAuditPane events={auditEvents} isStreaming={isStreaming} />
+        {showAuditPane ? (
+          <ToolAuditPane events={auditEvents} isStreaming={isStreaming} />
+        ) : null}
 
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">
           <div
