@@ -29,7 +29,7 @@ You will need two API keys to run this demo:
    docker load -i agentmemory-server-arm64-v1.0.0.tar
    ```
 
-4. Ensure catalog assets are available on GitHub. The `catalog-bootstrap` service clones this repository at startup and publishes `catalog/` into Couchbase. By default it uses:
+4. Ensure catalog assets are available on GitHub. The `catalog-bootstrap` service clones this repository at startup and publishes `catalog/` into Couchbase. By default, it uses:
 
    ```env
    CATALOG_GIT_URL=https://github.com/mminichino/couchbase-agent-memory-demo.git
@@ -42,8 +42,17 @@ You will need two API keys to run this demo:
 
 Start the demo by running:
 
-```bash
+```shell
 docker compose up --build -d
+```
+
+Or, using `make`:
+
+```shell
+make container-build
+```
+```shell
+make run
 ```
 
 Once the containers are running, you can access the demo in your browser at `http://localhost:3000`.
@@ -55,7 +64,7 @@ Docker Compose brings up:
 - **Couchbase Server** with demo flight data (`travel.data.flights`)
 - **Agent Memory Server** for session and long-term memory
 - **Couchbase MCP Server** for flight schedule lookup and SQL++ access
-- **Agent Catalog bootstrap** (`catalog-bootstrap`) which clones catalog source from GitHub, then indexes and publishes prompts/tools to Couchbase using `agentc` (installed with `uv`)
+- **Agent Catalog bootstrap** (`catalog-bootstrap`) which clones a catalog source from GitHub, then indexes, and publishes prompts/tools to Couchbase using `agentc` (installed with `uv`)
 - **gRPC chat service** which loads the catalog-managed system prompt, catalog SQL++ tools, memory tools, MCP tools, and Tavily web search
 - **Web UI** with a chat pane and a live Agent Catalog tool audit pane
 
