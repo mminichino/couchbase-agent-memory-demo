@@ -1,7 +1,8 @@
 /*
 name: flights_by_route
 description: >
-  Find flight schedules between two airports on a given weekday from the demo flights dataset.
+  Find flight schedules between two airports on a given weekday from the demo
+  flights dataset, including all fare classes and prices (cabins) for each flight.
 input:
   type: object
   properties:
@@ -21,7 +22,14 @@ secrets:
       username: CB_USERNAME
       password: CB_PASSWORD
 */
-SELECT carrier_name, flight_number, departure_time_local, arrival_time_local, duration_minutes, operating_weekday
+SELECT
+  carrier_name,
+  flight_number,
+  departure_time_local,
+  arrival_time_local,
+  duration_minutes,
+  operating_weekday,
+  cabins
 FROM `travel`.`data`.`flights` AS f
 WHERE f.origin = $origin
   AND f.destination = $destination
