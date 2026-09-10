@@ -76,6 +76,18 @@ make run
 
 Once the containers are running, you can access the demo in your browser at `http://localhost:3000`.
 
+### Sample conversation script
+
+Try these user messages to exercise web search, Agent Memory preferences, MCP data lookup, and Couchbase SQL++:
+
+1. What is the current weather in New York City?
+2. When I travel, I prefer an isle seat.
+3. When I travel, I prefer morning flights.
+4. What are my travel preferences?
+5. What are my flight options next week on Tuesday from DFW to New York City?
+6. What is the least expensive flight from DFW to New York City next week on Wednesday?
+7. How many records are in the flights collection in the travel bucket in Couchbase?
+
 ### What starts up
 
 Docker Compose brings up:
