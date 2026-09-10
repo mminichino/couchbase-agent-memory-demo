@@ -1,0 +1,45 @@
+apiVersion: v1
+entries:
+  agent-memory-demo:
+  - apiVersion: v2
+    appVersion: 0.3.0
+    created: "2026-09-10T18:16:48.113618952Z"
+    description: Couchbase Agent Memory Server Demo
+    digest: 3da2a28cf0e5cc53414070e7103b7c2aac3ef8cd3e6d7174ac3dc09f1fb625a7
+    home: https://github.com/mminichino/couchbase-agent-memory-demo
+    keywords:
+    - agent
+    - memory
+    - couchbase
+    maintainers:
+    - name: Michael Minichino
+      url: https://github.com/mminichino/couchbase-agent-memory-demo
+    name: agent-memory-demo
+    sources:
+    - https://github.com/mminichino/couchbase-agent-memory-demo
+    type: application
+    urls:
+    - https://github.com/mminichino/couchbase-agent-memory-demo/releases/download/agent-memory-demo-0.3.6/agent-memory-demo-0.3.6.tgz
+    version: 0.3.6
+  agent-memory-server:
+  - apiVersion: v2
+    appVersion: 1.0.0
+    created: "2026-09-10T18:16:48.300205746Z"
+    description: Couchbase Agent Memory Server
+    digest: bd1e86aa591d2dd1ccfcb6d10f4d085cdd103b515ab09a70267f1d6748c8ef2b
+    home: https://github.com/mminichino/couchbase-agent-memory-demo
+    keywords:
+    - agent
+    - memory
+    - couchbase
+    maintainers:
+    - name: Michael Minichino
+      url: https://github.com/mminichino/couchbase-agent-memory-demo
+    name: agent-memory-server
+    sources:
+    - https://github.com/mminichino/couchbase-agent-memory-demo
+    type: application
+    urls:
+    - https://github.com/mminichino/couchbase-agent-memory-demo/releases/download/agent-memory-server-1.0.0/agent-memory-server-1.0.0.tgz
+    version: 1.0.0
+generated: "2026-09-10T18:16:48.30020859Z"
