@@ -11,8 +11,13 @@ container-build:
 run:
 	docker compose up -d
 
+start: run
+
 stop:
 	docker compose down
+
+clean:
+	docker compose down -v
 
 docker-api:
 	docker buildx build --platform linux/amd64,linux/arm64 --no-cache -t agent-memory-demo-api:$(API_VERSION) -f Dockerfile.grpc . --load
