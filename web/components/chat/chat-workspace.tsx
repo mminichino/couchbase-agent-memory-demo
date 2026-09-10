@@ -6,6 +6,7 @@ import { ChatComposer } from "@/components/chat/chat-composer";
 import { ChatThread } from "@/components/chat/chat-thread";
 import { ToolAuditPane } from "@/components/chat/tool-audit-pane";
 import type { AuditEvent, ChatEvent } from "@/lib/types";
+import type { ModelDisplayInfo } from "@/lib/model-config";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
@@ -18,6 +19,13 @@ type WorkspaceProps = {
 type StreamEvent = {
   type: ChatEvent["type"];
   [key: string]: unknown;
+};
+
+const EMPTY_MODELS: ModelDisplayInfo = {
+  llmProvider: "…",
+  llmModel: "…",
+  embeddingModel: "…",
+  embeddingProvider: "…"
 };
 
 function isAuditEvent(event: ChatEvent): event is AuditEvent {
@@ -53,10 +61,33 @@ function toAuditEvents(events: ChatEvent[]): AuditEvent[] {
   return [...fromCatalog, ...derived];
 }
 
+function Detail({
+  label,
+  value,
+  title
+}: {
+  label: string;
+  value: string;
+  title?: string;
+}) {
+  return (
+    <div className="min-w-0">
+      <p className="text-[10px] uppercase tracking-wide text-muted">{label}</p>
+      <p
+        className="mt-0.5 truncate text-xs text-foreground"
+        title={title ?? value}
+      >
+        {value}
+      </p>
+    </div>
+  );
+}
+
 export function ChatWorkspace({ userId, sessionId }: WorkspaceProps) {
   const [events, setEvents] = useState<ChatEvent[]>([]);
   const [isStreaming, setStreaming] = useState(false);
   const [showAuditPane, setShowAuditPane] = useState(false);
+  const [models, setModels] = useState<ModelDisplayInfo>(EMPTY_MODELS);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const auditEvents = useMemo(() => toAuditEvents(events), [events]);
@@ -67,6 +98,33 @@ export function ChatWorkspace({ userId, sessionId }: WorkspaceProps) {
   );
 
   useSyncChatErrorState(hasError);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/models")
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error(await response.text());
+        }
+        return response.json() as Promise<ModelDisplayInfo>;
+      })
+      .then((info) => {
+        if (!cancelled) setModels(info);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setModels({
+            llmProvider: "—",
+            llmModel: "—",
+            embeddingModel: "—",
+            embeddingProvider: "—"
+          });
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -143,13 +201,13 @@ export function ChatWorkspace({ userId, sessionId }: WorkspaceProps) {
   return (
     <section className="flex min-h-0 flex-1 flex-col gap-4">
       <div className="mx-auto w-full max-w-6xl shrink-0">
-        <Card className="p-4">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <h3 className="text-sm font-semibold text-foreground">Session details</h3>
+        <Card className="px-3 py-2.5">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h3 className="text-xs font-semibold text-foreground">Session details</h3>
             <Button
               type="button"
               variant="secondary"
-              className="h-8 px-3 text-xs"
+              className="h-7 px-2.5 text-[11px]"
               aria-pressed={showAuditPane}
               aria-controls="tool-audit-stream"
               onClick={() => setShowAuditPane((open) => !open)}
@@ -157,15 +215,17 @@ export function ChatWorkspace({ userId, sessionId }: WorkspaceProps) {
               {showAuditPane ? "Hide tool audit" : "Show tool audit"}
             </Button>
           </div>
-          <div className="mt-3 grid gap-2 text-xs text-muted sm:grid-cols-2">
-            <div className="rounded-md border border-border bg-panelMuted/60 px-3 py-2">
-              <p className="text-[11px] uppercase tracking-wide text-muted">User ID</p>
-              <p className="mt-1 truncate font-mono text-sm text-foreground">{userId}</p>
-            </div>
-            <div className="rounded-md border border-border bg-panelMuted/60 px-3 py-2">
-              <p className="text-[11px] uppercase tracking-wide text-muted">Session ID</p>
-              <p className="mt-1 break-all font-mono text-sm text-foreground">{sessionId}</p>
-            </div>
+          <div className="mt-2 grid gap-x-4 gap-y-1.5 sm:grid-cols-2 lg:grid-cols-4">
+            <Detail label="User" value={userId} />
+            <Detail
+              label="LLM"
+              value={`${models.llmProvider} · ${models.llmModel}`}
+            />
+            <Detail label="Embedding model" value={models.embeddingModel} />
+            <Detail
+              label="Embedding provider"
+              value={models.embeddingProvider}
+            />
           </div>
         </Card>
       </div>

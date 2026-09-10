@@ -28,11 +28,37 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.secrets.tavily }}
                   key: TAVILY_API_KEY
+            {{- if .Values.llm.anthropicEnabled }}
+            - name: AGENTMEMORY_LLM_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.anthropic }}
+                  key: AGENTMEMORY_LLM_API_KEY
+            - name: AGENTMEMORY_LLM_MODEL
+              value: {{ .Values.llm.model | default "claude-sonnet-5" | quote }}
+            - name: AGENTMEMORY_LLM_URL
+              value: {{ .Values.llm.url | default "https://api.anthropic.com/v1/" | quote }}
+            {{- else }}
             - name: OPENAI_API_KEY
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.secrets.openai }}
                   key: OPENAI_API_KEY
+            {{- if .Values.llm.model }}
+            - name: AGENTMEMORY_LLM_MODEL
+              value: {{ .Values.llm.model | quote }}
+            {{- end }}
+            {{- if .Values.llm.url }}
+            - name: AGENTMEMORY_LLM_URL
+              value: {{ .Values.llm.url | quote }}
+            {{- end }}
+            {{- end }}
+            - name: AGENTMEMORY_EMBEDDING_MODEL
+              value: {{ .Values.embedding.model | quote }}
+            {{- if .Values.embedding.url }}
+            - name: AGENTMEMORY_EMBEDDING_URL
+              value: {{ .Values.embedding.url | quote }}
+            {{- end }}
           ports:
             - name: http
               containerPort: 8088

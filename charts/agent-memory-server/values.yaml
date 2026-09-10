@@ -10,6 +10,10 @@ port: 8080
 model:
   llm: "gpt-5.4"
   embedding: "text-embedding-3-small"
+  # Optional OpenAI-compatible base URLs.
+  llmUrl: ""
+  # When set, embeddings use this endpoint instead of built-in OpenAI.
+  embeddingUrl: ""
 
 couchbase:
   connectionString: "couchbase://couchbase.example.com"
@@ -34,9 +38,18 @@ processing:
   maxFailCount: 3
   taskTimeoutSeconds: 300
 
+# LLM: anthropic.enabled -> Claude via AGENTMEMORY_LLM_*; otherwise OpenAI.
+# Embeddings: OpenAI by default, or model.embeddingUrl (+ openai secret as embedding key).
 openai:
   secretName: openai-api-key-secret
   key: ""
+
+anthropic:
+  enabled: false
+  secretName: anthropic-api-key-secret
+  key: ""
+  model: "claude-sonnet-5"
+  llmUrl: "https://api.anthropic.com/v1/"
 
 externalSecret:
   enabled: true
@@ -45,5 +58,6 @@ externalSecret:
     name: "secret-store"
   keys:
     openai: "openai-api-key"
+    anthropic: "anthropic-api-key"
     couchbaseUsername: "couchbase-username"
     couchbasePassword: "couchbase-password"

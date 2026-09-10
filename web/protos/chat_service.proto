@@ -4,6 +4,7 @@ package memory_demo.chat.v1;
 
 service ChatService {
   rpc ProcessInput(ProcessInputRequest) returns (stream BaseMessageChunk);
+  rpc GetModelInfo(GetModelInfoRequest) returns (ModelInfo);
 }
 
 message ProcessInputRequest {
@@ -15,4 +16,13 @@ message ProcessInputRequest {
 message BaseMessageChunk {
   string message_json = 1;
   string audit_json = 2;
+}
+
+message GetModelInfoRequest {}
+
+message ModelInfo {
+  string llm_provider = 1;
+  string llm_model = 2;
+  string embedding_model = 3;
+  string embedding_provider = 4;
 }

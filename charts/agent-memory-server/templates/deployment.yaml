@@ -32,17 +32,59 @@ spec:
                   key: AGENTMEMORY_PASSWORD
             - name: AGENTMEMORY_BUCKET
               value: {{ .Values.couchbase.bucket | quote }}
+            {{- if .Values.anthropic.enabled }}
+            - name: AGENTMEMORY_LLM_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.anthropic.secretName }}
+                  key: AGENTMEMORY_LLM_API_KEY
+            - name: AGENTMEMORY_LLM_URL
+              value: {{ .Values.anthropic.llmUrl | quote }}
+            - name: AGENTMEMORY_LLM_MODEL
+              value: {{ .Values.anthropic.model | quote }}
+            - name: AGENTMEMORY_EMBEDDING_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.openai.secretName }}
+                  key: OPENAI_API_KEY
+            {{- if .Values.model.embeddingUrl }}
+            - name: AGENTMEMORY_EMBEDDING_URL
+              value: {{ .Values.model.embeddingUrl | quote }}
+            {{- end }}
+            - name: AGENTMEMORY_EMBEDDING_MODEL
+              value: {{ .Values.model.embedding | quote }}
+            {{- else }}
+            {{- if .Values.model.embeddingUrl }}
+            - name: AGENTMEMORY_LLM_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.openai.secretName }}
+                  key: OPENAI_API_KEY
+            - name: AGENTMEMORY_EMBEDDING_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.openai.secretName }}
+                  key: OPENAI_API_KEY
+            - name: AGENTMEMORY_EMBEDDING_URL
+              value: {{ .Values.model.embeddingUrl | quote }}
+            {{- else }}
             - name: OPENAI_API_KEY
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.openai.secretName }}
                   key: OPENAI_API_KEY
-            - name: AGENTMEMORY_MEMORY_BLOCK_TTL
-              value: {{ .Values.memory.blockTtl | quote }}
-            - name: AGENTMEMORY_EMBEDDING_MODEL
-              value: {{ .Values.model.embedding | quote }}
+            {{- end }}
             - name: AGENTMEMORY_LLM_MODEL
               value: {{ .Values.model.llm | quote }}
+            - name: AGENTMEMORY_EMBEDDING_MODEL
+              value: {{ .Values.model.embedding | quote }}
+            {{- if .Values.model.llmUrl }}
+            - name: AGENTMEMORY_LLM_URL
+              value: {{ .Values.model.llmUrl | quote }}
+            {{- end }}
+            {{- end }}
+            - name: AGENTMEMORY_MEMORY_BLOCK_TTL
+              value: {{ .Values.memory.blockTtl | quote }}
             - name: AGENTMEMORY_EXTRACT_SEMANTIC
               value: {{ .Values.memory.extractSemantic | quote }}
             - name: AGENTMEMORY_SUMMARY_TOKEN_LIMIT

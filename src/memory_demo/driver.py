@@ -22,7 +22,6 @@ from langchain_core.messages import (
     ToolMessage,
 )
 from langchain_core.tools import BaseTool
-from langchain_openai import ChatOpenAI
 from tenacity import retry, stop_after_attempt, wait_fixed
 
 from memory_demo.catalog_client import (
@@ -34,6 +33,7 @@ from memory_demo.catalog_client import (
     log_tool_result,
     turn_span_for,
 )
+from memory_demo.llm_config import LLMConfig, build_chat_model, resolve_llm_config
 from memory_demo.mcp_tools import get_mcp_server_url, get_mcp_tools
 from memory_demo.memory_tools import MemoryToolProvider
 from memory_demo.web_search_tools import web_search_function
@@ -51,7 +51,7 @@ MAX_TOOL_ITERATIONS = 10
 class ChatWithMemory:
     def __init__(
         self,
-        smart_model: str = "gpt-5.4",
+        smart_model: str | None = None,
         ams_url: str = "http://localhost:8080",
         mcp_server_url: str | None = None,
         enable_sync_methods: bool = True,
@@ -59,10 +59,31 @@ class ChatWithMemory:
         on_audit: AuditCallback | None = None,
     ) -> None:
         self.error_count = 0
-        self.smart_model = smart_model
         self.ams_url = ams_url
         self.mcp_server_url = get_mcp_server_url(mcp_server_url)
-        self._base_smart_llm = smart_chat_model or ChatOpenAI(model=smart_model)
+        if smart_chat_model is not None:
+            self.smart_model = smart_model or getattr(
+                smart_chat_model, "model_name", None
+            ) or getattr(smart_chat_model, "model", None) or "custom"
+            self._base_smart_llm = smart_chat_model
+            logger.info("Chat LLM: injected model (%s)", self.smart_model)
+        else:
+            llm_config = resolve_llm_config()
+            if smart_model and smart_model != llm_config.model:
+                llm_config = LLMConfig(
+                    provider=llm_config.provider,
+                    model=smart_model,
+                    api_key=llm_config.api_key,
+                    base_url=llm_config.base_url,
+                )
+            self.smart_model = llm_config.model
+            self._base_smart_llm = build_chat_model(llm_config)
+            logger.info(
+                "Chat LLM: %s (%s)%s",
+                self.smart_model,
+                llm_config.provider,
+                f" via {llm_config.base_url}" if llm_config.base_url else "",
+            )
         self._mcp_tools: list[BaseTool] | None = None
         self._catalog_tools: list[BaseTool] | None = None
         self._system_prompt: str | None = None

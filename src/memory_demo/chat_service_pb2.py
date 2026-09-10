@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x12\x63hat_service.proto\x12\x13memory_demo.chat.v1\"K\n\x13ProcessInputRequest\x12\x0f\n\x07\x63ontent\x18\x01 \x01(\t\x12\x12\n\nsession_id\x18\x02 \x01(\t\x12\x0f\n\x07user_id\x18\x03 \x01(\t\"<\n\x10\x42\x61seMessageChunk\x12\x14\n\x0cmessage_json\x18\x01 \x01(\t\x12\x12\n\naudit_json\x18\x02 \x01(\t2p\n\x0b\x43hatService\x12\x61\n\x0cProcessInput\x12(.memory_demo.chat.v1.ProcessInputRequest\x1a%.memory_demo.chat.v1.BaseMessageChunk0\x01\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x12\x63hat_service.proto\x12\x13memory_demo.chat.v1\"K\n\x13ProcessInputRequest\x12\x0f\n\x07\x63ontent\x18\x01 \x01(\t\x12\x12\n\nsession_id\x18\x02 \x01(\t\x12\x0f\n\x07user_id\x18\x03 \x01(\t\"<\n\x10\x42\x61seMessageChunk\x12\x14\n\x0cmessage_json\x18\x01 \x01(\t\x12\x12\n\naudit_json\x18\x02 \x01(\t\"\x15\n\x13GetModelInfoRequest\"i\n\tModelInfo\x12\x14\n\x0cllm_provider\x18\x01 \x01(\t\x12\x11\n\tllm_model\x18\x02 \x01(\t\x12\x17\n\x0f\x65mbedding_model\x18\x03 \x01(\t\x12\x1a\n\x12\x65mbedding_provider\x18\x04 \x01(\t2\xca\x01\n\x0b\x43hatService\x12\x61\n\x0cProcessInput\x12(.memory_demo.chat.v1.ProcessInputRequest\x1a%.memory_demo.chat.v1.BaseMessageChunk0\x01\x12X\n\x0cGetModelInfo\x12(.memory_demo.chat.v1.GetModelInfoRequest\x1a\x1e.memory_demo.chat.v1.ModelInfob\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -35,6 +35,10 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_PROCESSINPUTREQUEST']._serialized_end=118
   _globals['_BASEMESSAGECHUNK']._serialized_start=120
   _globals['_BASEMESSAGECHUNK']._serialized_end=180
-  _globals['_CHATSERVICE']._serialized_start=182
-  _globals['_CHATSERVICE']._serialized_end=294
+  _globals['_GETMODELINFOREQUEST']._serialized_start=182
+  _globals['_GETMODELINFOREQUEST']._serialized_end=203
+  _globals['_MODELINFO']._serialized_start=205
+  _globals['_MODELINFO']._serialized_end=310
+  _globals['_CHATSERVICE']._serialized_start=313
+  _globals['_CHATSERVICE']._serialized_end=515
 # @@protoc_insertion_point(module_scope)

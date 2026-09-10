@@ -20,13 +20,28 @@ server:
 
 keys:
   openai: ""
+  anthropic: ""
   tavily: ""
 
 secrets:
   openai: "openai-api-key-demo-secret"
+  anthropic: "anthropic-api-key-demo-secret"
   tavily: "tavily-api-key-demo-secret"
   password: "agent-memory-demo-password"
   url: "agent-memory-server-url"
+
+# Prefer Claude when llm.anthropicEnabled is true (API container exposes GetModelInfo).
+# Embeddings for AMS remain configured on the agent-memory-server chart; the demo
+# API also receives embedding model/url for Session details via gRPC.
+llm:
+  anthropicEnabled: false
+  # Used when anthropicEnabled is true (or as optional OpenAI overrides when set).
+  model: ""
+  url: ""
+
+embedding:
+  model: "text-embedding-3-small"
+  url: ""
 
 dns:
   domain: ""
@@ -53,6 +68,7 @@ externalSecret:
     name: "secret-store"
   keys:
     openai: "openai-api-key"
+    anthropic: "anthropic-api-key"
     tavily: "tavily-api-key"
     password: "demo-ui-password"
     couchbaseUsername: "couchbase-username"

@@ -5,8 +5,8 @@ import typer
 import logging
 import random
 import os
-from langchain_openai import ChatOpenAI
 from memory_demo.driver import ChatWithMemory
+from memory_demo.llm_config import build_chat_model
 from langchain_core.messages import SystemMessage, HumanMessage
 from dotenv import load_dotenv
 
@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 app = typer.Typer()
 
 load_dotenv()
-llm = ChatOpenAI(model="gpt-5.4")
+llm = build_chat_model()
 
 async def generate_message(history) -> str:
     message_types = [
