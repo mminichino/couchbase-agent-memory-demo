@@ -12,10 +12,7 @@ export default async function AppPage() {
 
   return (
     <AppShell user={user}>
-      <ChatWorkspace
-        userId={user.user_id}
-        sessionId={sessionId}
-      />
+      <ChatWorkspace userId={user.user_id} sessionId={sessionId} />
     </AppShell>
   );
 }

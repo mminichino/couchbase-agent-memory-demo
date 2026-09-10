@@ -8,7 +8,7 @@ from memory_demo.driver import ChatWithMemory
 
 @pytest.mark.skipif(
     os.getenv("RUN_INTEGRATION_TESTS") != "1",
-    reason="requires Couchbase Agent Memory, OpenAI, and Tavily services",
+    reason="requires Couchbase Agent Memory, an LLM API key, and Tavily services",
 )
 def test_single_chat_message() -> None:
     load_dotenv()

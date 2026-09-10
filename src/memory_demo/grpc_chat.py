@@ -24,6 +24,7 @@ from memory_demo import chat_service_pb2
 from memory_demo import chat_service_pb2_grpc
 from memory_demo.driver import ChatWithMemory
 from memory_demo.mcp_tools import DEFAULT_MCP_SERVER_URL
+from memory_demo.model_display import get_model_display_info
 
 logger = logging.getLogger()
 
@@ -97,6 +98,19 @@ class ChatGrpcServicer(chat_service_pb2_grpc.ChatServiceServicer):
                 with contextlib.suppress(asyncio.CancelledError):
                     await worker
 
+    async def GetModelInfo(
+        self,
+        request: chat_service_pb2.GetModelInfoRequest,  # noqa: ARG002, N802
+        context: grpc.aio.ServicerContext,  # noqa: ARG002
+    ) -> chat_service_pb2.ModelInfo:
+        info = get_model_display_info()
+        return chat_service_pb2.ModelInfo(
+            llm_provider=info.llm_provider,
+            llm_model=info.llm_model,
+            embedding_model=info.embedding_model,
+            embedding_provider=info.embedding_provider,
+        )
+
 
 class _SharedChatFactory:
     def __init__(self, chat: ChatWithMemory) -> None:
@@ -110,6 +124,7 @@ class _SharedChatFactory:
             mcp_server_url=self._chat.mcp_server_url,
             enable_sync_methods=False,
             smart_model=self._chat.smart_model,
+            smart_chat_model=self._chat._base_smart_llm,
             on_audit=on_audit,
         )
 

@@ -39,12 +39,23 @@ class ChatServiceStub(object):
                 request_serializer=chat__service__pb2.ProcessInputRequest.SerializeToString,
                 response_deserializer=chat__service__pb2.BaseMessageChunk.FromString,
                 _registered_method=True)
+        self.GetModelInfo = channel.unary_unary(
+                '/memory_demo.chat.v1.ChatService/GetModelInfo',
+                request_serializer=chat__service__pb2.GetModelInfoRequest.SerializeToString,
+                response_deserializer=chat__service__pb2.ModelInfo.FromString,
+                _registered_method=True)
 
 
 class ChatServiceServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def ProcessInput(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetModelInfo(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -57,6 +68,11 @@ def add_ChatServiceServicer_to_server(servicer, server):
                     servicer.ProcessInput,
                     request_deserializer=chat__service__pb2.ProcessInputRequest.FromString,
                     response_serializer=chat__service__pb2.BaseMessageChunk.SerializeToString,
+            ),
+            'GetModelInfo': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetModelInfo,
+                    request_deserializer=chat__service__pb2.GetModelInfoRequest.FromString,
+                    response_serializer=chat__service__pb2.ModelInfo.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -86,6 +102,33 @@ class ChatService(object):
             '/memory_demo.chat.v1.ChatService/ProcessInput',
             chat__service__pb2.ProcessInputRequest.SerializeToString,
             chat__service__pb2.BaseMessageChunk.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetModelInfo(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/memory_demo.chat.v1.ChatService/GetModelInfo',
+            chat__service__pb2.GetModelInfoRequest.SerializeToString,
+            chat__service__pb2.ModelInfo.FromString,
             options,
             channel_credentials,
             insecure,
