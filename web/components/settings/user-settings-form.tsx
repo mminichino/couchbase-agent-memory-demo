@@ -65,7 +65,7 @@ export function UserSettingsForm({ initial }: UserSettingsFormProps) {
           </p>
         </fieldset>
       </Card>
-      {error && <p className="text-sm text-red-300">{error}</p>}
+      {error && <p className="text-sm text-dangerText">{error}</p>}
       <Button onClick={() => void onSave()} disabled={saving} type="button">
         {saving ? "Saving…" : "Save settings"}
       </Button>

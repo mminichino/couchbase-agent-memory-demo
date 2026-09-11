@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { AppShellStatus } from "@/components/app-shell-status";
 import { LogoutForm } from "@/components/logout-form";
+import { ThemeToggle } from "@/components/theme-toggle";
 import type { Account } from "@/lib/types";
 
 type AppShellProps = {
@@ -39,6 +40,7 @@ export function AppShell({ user, children }: AppShellProps) {
             >
               Accounts
             </Link>
+            <ThemeToggle className="hidden lg:inline-flex" />
             <div className="hidden text-right text-xs text-muted md:block">
               <p>{user.first_name || user.user_id}</p>
               <p>{user.user_id}</p>
