@@ -63,7 +63,7 @@ export function AccountsAdmin() {
       </Card>
       <AccountForm onCreated={loadAccounts} />
       {error ? (
-        <Card className="border-red-500/40 bg-red-500/10 p-3 text-sm text-red-300">
+        <Card className="border-danger/40 bg-danger/10 p-3 text-sm text-dangerText">
           {error}
         </Card>
       ) : null}
