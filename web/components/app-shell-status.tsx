@@ -7,7 +7,7 @@ export function AppShellStatus() {
   return (
     <p className="shrink-0 text-sm text-muted">
       <span className="text-foreground/80">Status: </span>
-      <span className={status === "healthy" ? "text-green-300" : "text-red-300"}>
+      <span className={status === "healthy" ? "text-successText" : "text-dangerText"}>
         {status === "healthy" ? "Healthy" : "Attention needed"}
       </span>
     </p>

@@ -10,10 +10,10 @@ type ToolAuditPaneProps = {
 };
 
 const STATUS_STYLES: Record<string, string> = {
-  running: "border-amber-400/40 bg-amber-500/10 text-amber-100",
-  success: "border-emerald-400/40 bg-emerald-500/10 text-emerald-100",
-  error: "border-red-400/40 bg-red-500/10 text-red-100",
-  info: "border-sky-400/40 bg-sky-500/10 text-sky-100"
+  running: "border-chip-runBorder bg-chip-runBg text-chip-runFg",
+  success: "border-chip-okBorder bg-chip-okBg text-chip-okFg",
+  error: "border-chip-errBorder bg-chip-errBg text-chip-errFg",
+  info: "border-chip-infoBorder bg-chip-infoBg text-chip-infoFg"
 };
 
 const EVENT_LABELS: Record<string, string> = {
@@ -69,23 +69,23 @@ export function ToolAuditPane({ events, isStreaming }: ToolAuditPaneProps) {
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="text-[11px] uppercase tracking-wide opacity-80">
+                      <p className="text-[11px] uppercase tracking-wide opacity-[var(--chip-label-opacity)]">
                         {eventLabel(event.event_type)}
                       </p>
                       <p className="mt-1 text-sm font-medium">{event.title}</p>
                     </div>
                     {typeof event.duration_ms === "number" ? (
-                      <span className="shrink-0 rounded-full bg-black/20 px-2 py-0.5 text-[11px] tabular-nums">
+                      <span className="shrink-0 rounded-full bg-chip-overlay px-2 py-0.5 text-[11px] tabular-nums">
                         {(event.duration_ms / 1000).toFixed(2)}s
                       </span>
                     ) : null}
                   </div>
                   {event.summary ? (
-                    <pre className="mt-2 max-h-40 overflow-auto whitespace-pre-wrap break-words rounded-md bg-black/15 p-2 text-[11px] leading-relaxed text-inherit">
+                    <pre className="mt-2 max-h-40 overflow-auto whitespace-pre-wrap break-words rounded-md bg-chip-overlaySoft p-2 text-[11px] leading-relaxed text-inherit">
                       {event.summary}
                     </pre>
                   ) : null}
-                  <p className="mt-2 text-[10px] uppercase tracking-wide opacity-60">
+                  <p className="mt-2 text-[10px] uppercase tracking-wide opacity-[var(--chip-meta-opacity)]">
                     {new Date(event.timestamp).toLocaleTimeString()}
                   </p>
                 </li>
@@ -95,7 +95,7 @@ export function ToolAuditPane({ events, isStreaming }: ToolAuditPaneProps) {
         </div>
 
         {isStreaming ? (
-          <div className="border-t border-border/80 px-4 py-2 text-xs text-amber-200/90">
+          <div className="border-t border-border/80 px-4 py-2 text-xs text-warningText">
             Recording agent activity...
           </div>
         ) : null}

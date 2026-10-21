@@ -74,7 +74,7 @@ export function ChatThread({ events, isStreaming }: ChatThreadProps) {
             </div>
           ) : null}
           {event.type === "error" ? (
-            <p className="text-sm text-red-300">{event.message}</p>
+            <p className="text-sm text-dangerText">{event.message}</p>
           ) : null}
         </Card>
       ))}

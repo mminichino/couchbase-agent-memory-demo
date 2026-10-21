@@ -9,13 +9,13 @@ type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
 
 const styles: Record<NonNullable<ButtonProps["variant"]>, string> = {
   primary:
-    "bg-brand text-white hover:bg-blue-500 focus-visible:outline-blue-300",
+    "bg-brand text-brandFg hover:bg-brandHover focus-visible:outline-brand",
   secondary:
-    "bg-panelMuted text-foreground border border-border hover:bg-slate-700/60 focus-visible:outline-slate-300",
+    "bg-panelMuted text-foreground border border-border hover:bg-panelHover focus-visible:outline-brand",
   ghost:
-    "bg-transparent text-foreground hover:bg-panelMuted focus-visible:outline-slate-300",
+    "bg-transparent text-foreground hover:bg-panelMuted focus-visible:outline-brand",
   danger:
-    "bg-danger text-white hover:bg-red-500 focus-visible:outline-red-200"
+    "bg-danger text-dangerFg hover:bg-dangerHover focus-visible:outline-danger"
 };
 
 export function Button({

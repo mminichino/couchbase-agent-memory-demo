@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { safeJson } from "@/lib/utils";
 
 type LoginError = { error?: string };
@@ -46,7 +47,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4">
+    <div className="flex min-h-screen flex-col items-center justify-center gap-4 px-4">
       <Card className="w-full max-w-md p-6">
         <div className="mb-6">
           <p className="text-xs uppercase tracking-wide text-muted">Secure Access</p>
@@ -84,7 +85,7 @@ export default function LoginPage() {
             />
           </div>
           {error ? (
-            <p className="rounded-md border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-300">
+            <p className="rounded-md border border-danger/40 bg-danger/10 px-3 py-2 text-sm text-dangerText">
               {error}
             </p>
           ) : null}
@@ -93,6 +94,7 @@ export default function LoginPage() {
           </Button>
         </form>
       </Card>
+      <ThemeToggle />
     </div>
   );
 }

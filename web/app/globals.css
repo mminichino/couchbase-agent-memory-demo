@@ -2,8 +2,165 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
+/*
+ * Theme tokens.
+ *
+ * Colours that support Tailwind's `/opacity` modifier (bg-panel/95, border-border/80)
+ * are stored as raw `R G B` channels so the config can emit `rgb(var(--x) / <alpha-value>)`.
+ * The chip colours below never take an opacity modifier, so they are plain colours.
+ *
+ * `data-theme` is set on <html> before first paint by the inline script in app/layout.tsx.
+ */
+
+:root,
+[data-theme="dark"] {
   color-scheme: dark;
+
+  --canvas: 10 13 18;
+  --panel: 17 23 33;
+  --panel-muted: 21 29 41;
+  --panel-hover: 30 41 56;
+  --border: 32 44 58;
+  --foreground: 229 231 235;
+  --muted: 156 163 175;
+
+  --brand: 59 130 246;
+  --brand-hover: 96 165 250;
+  --brand-fg: 255 255 255;
+
+  --success: 34 197 94;
+  --success-text: 134 239 172;
+  --warning-text: 252 211 77;
+  --danger: 239 68 68;
+  --danger-hover: 248 113 113;
+  --danger-fg: 255 255 255;
+  --danger-text: 252 165 165;
+
+  /* Audit chips — these are the dark palette's amber/emerald/red/sky tints
+     pre-flattened against --panel, so they look identical to the original. */
+  --chip-run-bg: #28251f;
+  --chip-run-border: #6f5a22;
+  --chip-run-fg: #fef3c7;
+  --chip-ok-bg: #11272b;
+  --chip-ok-border: #1f6251;
+  --chip-ok-fg: #d1fae5;
+  --chip-err-bg: #271c24;
+  --chip-err-border: #6d3b41;
+  --chip-err-fg: #fee2e2;
+  --chip-info-bg: #112535;
+  --chip-info-border: #215977;
+  --chip-info-fg: #e0f2fe;
+
+  --chip-overlay-strong: rgb(0 0 0 / 0.2);
+  --chip-overlay-soft: rgb(0 0 0 / 0.15);
+  --chip-label-opacity: 0.8;
+  --chip-meta-opacity: 0.6;
+
+  --code-bg: 10 13 18;
+
+  --shadow-panel: 0 8px 30px rgb(5 10 20 / 0.24);
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+
+  --canvas: 246 247 249;
+  --panel: 255 255 255;
+  --panel-muted: 241 243 246;
+  --panel-hover: 230 233 238;
+  --border: 213 218 226;
+  --foreground: 26 34 48;
+  --muted: 91 102 117;
+
+  --brand: 37 99 235;
+  --brand-hover: 29 78 216;
+  --brand-fg: 255 255 255;
+
+  --success: 22 163 74;
+  --success-text: 21 128 61;
+  --warning-text: 180 83 9;
+  --danger: 220 38 38;
+  --danger-hover: 185 28 28;
+  --danger-fg: 255 255 255;
+  --danger-text: 185 28 28;
+
+  --chip-run-bg: #fef3c7;
+  --chip-run-border: #fcd34d;
+  --chip-run-fg: #92400e;
+  --chip-ok-bg: #d1fae5;
+  --chip-ok-border: #6ee7b7;
+  --chip-ok-fg: #065f46;
+  --chip-err-bg: #fee2e2;
+  --chip-err-border: #fca5a5;
+  --chip-err-fg: #991b1b;
+  --chip-info-bg: #e0f2fe;
+  --chip-info-border: #7dd3fc;
+  --chip-info-fg: #075985;
+
+  --chip-overlay-strong: rgb(255 255 255 / 0.55);
+  --chip-overlay-soft: rgb(255 255 255 / 0.7);
+  /* Dimming dark text on a pale fill costs far more contrast than dimming
+     light text on a dark fill, so the light themes dim less. */
+  --chip-label-opacity: 0.9;
+  --chip-meta-opacity: 0.75;
+
+  --code-bg: 241 243 246;
+
+  --shadow-panel: 0 1px 3px rgb(15 23 42 / 0.08), 0 8px 24px rgb(15 23 42 / 0.06);
+}
+
+/*
+ * Projector: not "light with more contrast dialled up at random".
+ * Projectors crush mid-tones and wash out low-alpha fills, so this palette uses
+ * pure white surfaces, black body text, mid-grey (not pale) borders so panel
+ * edges survive, and fully saturated dark accents.
+ */
+[data-theme="projector"] {
+  color-scheme: light;
+
+  --canvas: 255 255 255;
+  --panel: 255 255 255;
+  --panel-muted: 240 240 240;
+  --panel-hover: 220 220 220;
+  --border: 75 85 99;
+  --foreground: 0 0 0;
+  --muted: 51 58 69;
+
+  --brand: 29 78 216;
+  --brand-hover: 30 58 138;
+  --brand-fg: 255 255 255;
+
+  --success: 21 128 61;
+  --success-text: 20 83 45;
+  --warning-text: 133 77 14;
+  --danger: 185 28 28;
+  --danger-hover: 153 27 27;
+  --danger-fg: 255 255 255;
+  --danger-text: 153 27 27;
+
+  --chip-run-bg: #fef08a;
+  --chip-run-border: #a16207;
+  --chip-run-fg: #713f12;
+  --chip-ok-bg: #bbf7d0;
+  --chip-ok-border: #15803d;
+  --chip-ok-fg: #14532d;
+  --chip-err-bg: #fecaca;
+  --chip-err-border: #b91c1c;
+  --chip-err-fg: #7f1d1d;
+  --chip-info-bg: #bae6fd;
+  --chip-info-border: #0369a1;
+  --chip-info-fg: #0c4a6e;
+
+  --chip-overlay-strong: rgb(255 255 255 / 0.7);
+  --chip-overlay-soft: rgb(255 255 255 / 0.85);
+  --chip-label-opacity: 1;
+  --chip-meta-opacity: 0.9;
+
+  /* Must stay distinct from the pure-white panel, or code blocks vanish. */
+  --code-bg: 235 235 235;
+
+  /* Borders do the work here; a soft drop shadow just turns to mush on a projector. */
+  --shadow-panel: 0 1px 2px rgb(0 0 0 / 0.12);
 }
 
 html {
@@ -19,5 +176,5 @@ body {
 }
 
 a {
-  @apply text-brand transition-colors hover:text-blue-300;
+  @apply text-brand transition-colors hover:text-brandHover;
 }
