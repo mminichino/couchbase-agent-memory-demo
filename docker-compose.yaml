@@ -11,19 +11,15 @@ volumes:
 
 services:
   bootstrap:
-    image: mminichino/cbsbootstrap:0.5.0
+    image: mminichino/cbsbootstrap:0.6.0
     container_name: couchbase-bootstrap
     environment:
-      - CBS_NODES=127.0.0.1
-      - CBS_ALTERNATE_ADDRESS=couchbase-demo
-      - CBS_BUCKET=ams
-      - CBS_SCOPE=web
-      - CBS_COLLECTION=session
-      - CBS_IMPORT_KEYSPACE=travel.data.flights
+      - CBS_MANIFEST./bootstrap/couchbase.yaml
+      - CBS_PASSWORD=password
     volumes:
-      - ./data/flights.jsonl:/import/data.json
-    networks:
-      - agentmemory-network
+      - ./bootstrap/couchbase.yaml:/manifest/couchbase.yaml:ro
+      - ./data/flights.jsonl:/import/data.json:ro
+    network_mode: "service:couchbase"
     depends_on:
       couchbase:
         condition: service_started
