@@ -14,7 +14,7 @@ services:
     image: mminichino/cbsbootstrap:0.6.0
     container_name: couchbase-bootstrap
     environment:
-      - CBS_MANIFEST./bootstrap/couchbase.yaml
+      - CBS_MANIFEST=/manifest/couchbase.yaml
       - CBS_PASSWORD=password
     volumes:
       - ./bootstrap/couchbase.yaml:/manifest/couchbase.yaml:ro
