@@ -32,8 +32,8 @@ export function ChatThread({ events, isStreaming }: ChatThreadProps) {
 
   if (!events.length) {
     return (
-      <Card className="p-6">
-        <p className="text-sm text-muted">
+      <Card className="p-6 mobile:p-4">
+        <p className="text-sm text-muted projector:text-base">
           Start a conversation. Tool calls and Agent Catalog activity appear in the audit stream.
         </p>
       </Card>
@@ -42,8 +42,8 @@ export function ChatThread({ events, isStreaming }: ChatThreadProps) {
 
   if (!visibleEvents.length) {
     return (
-      <Card className="p-6">
-        <p className="text-sm text-muted">
+      <Card className="p-6 mobile:p-4">
+        <p className="text-sm text-muted projector:text-base">
           {isStreaming
             ? "Waiting for the assistant response..."
             : "No assistant replies yet. Ask a question to begin."}
@@ -55,15 +55,15 @@ export function ChatThread({ events, isStreaming }: ChatThreadProps) {
   return (
     <div className="space-y-3">
       {visibleEvents.map((event, idx) => (
-        <Card key={`${event.type}-${idx}`} className="p-4">
+        <Card key={`${event.type}-${idx}`} className="p-4 mobile:p-3 projector:p-5">
           {event.type === "message" ? (
             <div>
               <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-                <p className="text-xs uppercase tracking-wide text-muted">
+                <p className="text-xs uppercase tracking-wide text-muted projector:text-sm">
                   {displayRole(event.role)}
                 </p>
                 {typeof event.runtime_ms === "number" ? (
-                  <p className="text-xs tabular-nums text-muted">
+                  <p className="text-xs tabular-nums text-muted projector:text-sm">
                     {(event.runtime_ms / 1000).toFixed(2)}s elapsed
                   </p>
                 ) : null}
@@ -74,11 +74,11 @@ export function ChatThread({ events, isStreaming }: ChatThreadProps) {
             </div>
           ) : null}
           {event.type === "error" ? (
-            <p className="text-sm text-red-300">{event.message}</p>
+            <p className="text-sm text-red-300 projector:text-base">{event.message}</p>
           ) : null}
         </Card>
       ))}
-      {isStreaming ? <p className="text-xs text-muted">Streaming response...</p> : null}
+      {isStreaming ? <p className="text-xs text-muted projector:text-sm">Streaming response...</p> : null}
     </div>
   );
 }

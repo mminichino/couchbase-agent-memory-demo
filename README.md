@@ -42,10 +42,10 @@ You will need API keys to run this demo:
 
    See [Agent Memory env reference](https://docs.couchbase.com/ai/build/agent-memory/config-agent-mem-env.html) for `AGENTMEMORY_LLM_*` and `AGENTMEMORY_EMBEDDING_*`.
 
-3. Get and run Agent Memory Server container
+3. Pull the Agent Memory Server container (also pulled automatically by `docker compose up`)
 
    ```shell
-   docker load -i agentmemory-server-arm64-v1.0.0.tar
+   docker pull ghcr.io/couchbaselabs/agentmemory-server:v1.1.1
    ```
 
 4. Ensure catalog assets are available on GitHub. The `catalog-bootstrap` service clones this repository at startup and publishes `catalog/` into Couchbase. By default, it uses:

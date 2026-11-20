@@ -24,3 +24,11 @@ npm run dev
 ```
 
 Open `http://localhost:3000`.
+
+## Layouts
+
+The UI switches layouts via `<html data-layout="...">` (see `lib/layout.ts` and `components/layout-provider.tsx`). Tailwind exposes `projector:` and `mobile:` variants for layout-specific styles.
+
+- `default`: standard desktop layout.
+- `projector`: larger text, higher contrast and full-width panels for lower-resolution projectors. Enable with the **Projector mode** toggle (header, or top-right on the login page). The choice is stored in the `camd_layout` cookie.
+- `mobile`: single-column, touch-friendly layout. Enabled automatically for mobile devices (User-Agent on the server, confirmed on the client) and takes precedence over projector mode.

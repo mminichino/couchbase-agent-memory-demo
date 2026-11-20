@@ -1,5 +1,6 @@
 import type { Config } from "tailwindcss";
 import typography from "@tailwindcss/typography";
+import plugin from "tailwindcss/plugin";
 
 const config: Config = {
   content: [
@@ -13,9 +14,9 @@ const config: Config = {
         canvas: "#0A0D12",
         panel: "#111721",
         panelMuted: "#151D29",
-        border: "#202C3A",
-        foreground: "#E5E7EB",
-        muted: "#9CA3AF",
+        border: "rgb(var(--color-border) / <alpha-value>)",
+        foreground: "rgb(var(--color-foreground) / <alpha-value>)",
+        muted: "rgb(var(--color-muted) / <alpha-value>)",
         brand: "#3B82F6",
         success: "#22C55E",
         danger: "#EF4444"
@@ -25,7 +26,14 @@ const config: Config = {
       }
     }
   },
-  plugins: [typography]
+  plugins: [
+    typography,
+    // Layout variants driven by <html data-layout="...">, e.g. `projector:text-base`, `mobile:px-2`.
+    plugin(({ addVariant }) => {
+      addVariant("projector", '[data-layout="projector"] &');
+      addVariant("mobile", '[data-layout="mobile"] &');
+    })
+  ]
 };
 
 export default config;

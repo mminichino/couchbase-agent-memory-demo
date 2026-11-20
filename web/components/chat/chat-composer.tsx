@@ -28,9 +28,9 @@ export function ChatComposer({ onSubmit, isLoading, className }: ChatComposerPro
   }
 
   return (
-    <div className={cn("p-4", className)}>
+    <div className={cn("p-4 mobile:p-3", className)}>
       <form onSubmit={handleSubmit} className="space-y-3">
-        <label htmlFor="prompt" className="block text-sm font-medium text-foreground">
+        <label htmlFor="prompt" className="block text-sm font-medium text-foreground mobile:sr-only projector:text-base">
           Message
         </label>
         <Input
@@ -43,8 +43,8 @@ export function ChatComposer({ onSubmit, isLoading, className }: ChatComposerPro
           disabled={isLoading}
           aria-invalid={Boolean(error)}
         />
-        <div className="flex items-center justify-between">
-          <p className="text-xs text-muted">
+        <div className="flex items-center justify-between gap-3 mobile:flex-col mobile:items-stretch">
+          <p className="text-xs text-muted mobile:hidden projector:text-sm">
             Responses stream in real time from the chat service
           </p>
           <Button type="submit" disabled={isLoading}>

@@ -44,20 +44,20 @@ export function ToolAuditPane({ events, isStreaming }: ToolAuditPaneProps) {
   return (
     <aside
       id="tool-audit-stream"
-      className="flex min-h-0 w-full flex-col lg:max-w-sm lg:flex-none lg:basis-80 xl:basis-96"
+      className="flex min-h-0 w-full flex-col lg:max-w-sm lg:flex-none lg:basis-80 xl:basis-96 mobile:max-h-[40dvh] mobile:max-w-none mobile:flex-none mobile:basis-auto projector:lg:max-w-md projector:xl:basis-[28rem]"
     >
       <Card className="flex min-h-0 flex-1 flex-col overflow-hidden border-border/80 bg-panel/70 shadow-panel backdrop-blur-sm">
         <div className="border-b border-border/80 px-4 py-3">
-          <p className="text-[11px] uppercase tracking-[0.18em] text-muted">Agent Catalog</p>
-          <h2 className="mt-1 text-sm font-semibold text-foreground">Tool audit stream</h2>
-          <p className="mt-1 text-xs text-muted">
+          <p className="text-[11px] uppercase tracking-[0.18em] text-muted projector:text-xs">Agent Catalog</p>
+          <h2 className="mt-1 text-sm font-semibold text-foreground projector:text-base">Tool audit stream</h2>
+          <p className="mt-1 text-xs text-muted mobile:hidden projector:text-sm">
             Live tool calls and results traced through Agent Catalog
           </p>
         </div>
 
         <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto px-3 py-3">
           {!events.length ? (
-            <p className="rounded-lg border border-dashed border-border/80 bg-canvas/40 px-3 py-4 text-xs text-muted">
+            <p className="rounded-lg border border-dashed border-border/80 bg-canvas/40 px-3 py-4 text-xs text-muted projector:text-sm">
               Send a message to watch Agent Catalog record tool activity in real time.
             </p>
           ) : (
@@ -69,23 +69,23 @@ export function ToolAuditPane({ events, isStreaming }: ToolAuditPaneProps) {
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="text-[11px] uppercase tracking-wide opacity-80">
+                      <p className="text-[11px] uppercase tracking-wide opacity-80 projector:text-xs">
                         {eventLabel(event.event_type)}
                       </p>
-                      <p className="mt-1 text-sm font-medium">{event.title}</p>
+                      <p className="mt-1 text-sm font-medium projector:text-base">{event.title}</p>
                     </div>
                     {typeof event.duration_ms === "number" ? (
-                      <span className="shrink-0 rounded-full bg-black/20 px-2 py-0.5 text-[11px] tabular-nums">
+                      <span className="shrink-0 rounded-full bg-black/20 px-2 py-0.5 text-[11px] tabular-nums projector:text-xs">
                         {(event.duration_ms / 1000).toFixed(2)}s
                       </span>
                     ) : null}
                   </div>
                   {event.summary ? (
-                    <pre className="mt-2 max-h-40 overflow-auto whitespace-pre-wrap break-words rounded-md bg-black/15 p-2 text-[11px] leading-relaxed text-inherit">
+                    <pre className="mt-2 max-h-40 overflow-auto whitespace-pre-wrap break-words rounded-md bg-black/15 p-2 text-[11px] leading-relaxed text-inherit projector:text-xs">
                       {event.summary}
                     </pre>
                   ) : null}
-                  <p className="mt-2 text-[10px] uppercase tracking-wide opacity-60">
+                  <p className="mt-2 text-[10px] uppercase tracking-wide opacity-60 projector:text-xs projector:opacity-80">
                     {new Date(event.timestamp).toLocaleTimeString()}
                   </p>
                 </li>
@@ -95,7 +95,7 @@ export function ToolAuditPane({ events, isStreaming }: ToolAuditPaneProps) {
         </div>
 
         {isStreaming ? (
-          <div className="border-t border-border/80 px-4 py-2 text-xs text-amber-200/90">
+          <div className="border-t border-border/80 px-4 py-2 text-xs text-amber-200/90 projector:text-sm">
             Recording agent activity...
           </div>
         ) : null}

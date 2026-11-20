@@ -16,13 +16,14 @@ type MarkdownContentProps = {
 export function MarkdownContent({ markdown, className }: MarkdownContentProps) {
   const trimmed = markdown.trim();
   if (!trimmed) {
-    return <p className="text-sm text-muted">(no visible content)</p>;
+    return <p className="text-sm text-muted projector:text-base">(no visible content)</p>;
   }
 
   return (
     <div
       className={cn(
-        "prose prose-invert max-w-none text-sm leading-relaxed",
+        "prose prose-invert max-w-none break-words text-sm leading-relaxed",
+        "mobile:text-[15px] projector:text-base projector:leading-relaxed projector:prose-code:text-[15px] projector:prose-pre:text-[15px]",
         "prose-headings:scroll-mt-4 prose-headings:font-semibold prose-headings:text-foreground",
         "prose-p:text-foreground prose-li:text-foreground",
         "prose-a:text-brand prose-a:no-underline hover:prose-a:underline",

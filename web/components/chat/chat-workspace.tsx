@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useLayout } from "@/components/layout-provider";
 import { useSyncChatErrorState } from "@/components/chat/chat-health-context";
 import { ChatComposer } from "@/components/chat/chat-composer";
 import { ChatThread } from "@/components/chat/chat-thread";
@@ -72,9 +73,9 @@ function Detail({
 }) {
   return (
     <div className="min-w-0">
-      <p className="text-[10px] uppercase tracking-wide text-muted">{label}</p>
+      <p className="text-[10px] uppercase tracking-wide text-muted projector:text-xs">{label}</p>
       <p
-        className="mt-0.5 truncate text-xs text-foreground"
+        className="mt-0.5 truncate text-xs text-foreground projector:text-sm"
         title={title ?? value}
       >
         {value}
@@ -87,6 +88,8 @@ export function ChatWorkspace({ userId, sessionId }: WorkspaceProps) {
   const [events, setEvents] = useState<ChatEvent[]>([]);
   const [isStreaming, setStreaming] = useState(false);
   const [showAuditPane, setShowAuditPane] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
+  const { isMobile } = useLayout();
   const [models, setModels] = useState<ModelDisplayInfo>(EMPTY_MODELS);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -199,23 +202,42 @@ export function ChatWorkspace({ userId, sessionId }: WorkspaceProps) {
   }
 
   return (
-    <section className="flex min-h-0 flex-1 flex-col gap-4">
-      <div className="mx-auto w-full max-w-6xl shrink-0">
+    <section className="flex min-h-0 flex-1 flex-col gap-4 mobile:gap-2">
+      <div className="mx-auto w-full max-w-6xl shrink-0 projector:max-w-none">
         <Card className="px-3 py-2.5">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <h3 className="text-xs font-semibold text-foreground">Session details</h3>
-            <Button
-              type="button"
-              variant="secondary"
-              className="h-7 px-2.5 text-[11px]"
-              aria-pressed={showAuditPane}
-              aria-controls="tool-audit-stream"
-              onClick={() => setShowAuditPane((open) => !open)}
-            >
-              {showAuditPane ? "Hide tool audit" : "Show tool audit"}
-            </Button>
+            <h3 className="text-xs font-semibold text-foreground projector:text-sm">Session details</h3>
+            <div className="flex items-center gap-2">
+              {isMobile ? (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="h-9 px-3 text-xs"
+                  aria-expanded={showDetails}
+                  aria-controls="session-details"
+                  onClick={() => setShowDetails((open) => !open)}
+                >
+                  {showDetails ? "Hide details" : "Details"}
+                </Button>
+              ) : null}
+              <Button
+                type="button"
+                variant="secondary"
+                className="h-7 px-2.5 text-[11px] mobile:h-9 mobile:px-3 mobile:text-xs projector:h-9 projector:px-3 projector:text-sm"
+                aria-pressed={showAuditPane}
+                aria-controls="tool-audit-stream"
+                onClick={() => setShowAuditPane((open) => !open)}
+              >
+                {showAuditPane ? "Hide tool audit" : "Show tool audit"}
+              </Button>
+            </div>
           </div>
-          <div className="mt-2 grid gap-x-4 gap-y-1.5 sm:grid-cols-2 lg:grid-cols-4">
+          <div
+            id="session-details"
+            className={`mt-2 grid gap-x-4 gap-y-1.5 sm:grid-cols-2 lg:grid-cols-4 mobile:grid-cols-1 ${
+              isMobile && !showDetails ? "hidden" : ""
+            }`}
+          >
             <Detail label="User" value={userId} />
             <Detail
               label="LLM"
@@ -230,7 +252,7 @@ export function ChatWorkspace({ userId, sessionId }: WorkspaceProps) {
         </Card>
       </div>
 
-      <div className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col gap-4 lg:flex-row">
+      <div className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col gap-4 lg:flex-row mobile:gap-2 mobile:flex-col projector:max-w-none">
         {showAuditPane ? (
           <ToolAuditPane events={auditEvents} isStreaming={isStreaming} />
         ) : null}
@@ -240,12 +262,12 @@ export function ChatWorkspace({ userId, sessionId }: WorkspaceProps) {
             ref={scrollRef}
             className="flex min-h-0 flex-1 flex-col overflow-y-auto rounded-lg border border-border bg-panel/40 shadow-inner"
           >
-            <div className="p-4 pb-8">
+            <div className="p-4 pb-8 mobile:p-2 mobile:pb-4">
               <ChatThread events={events} isStreaming={isStreaming} />
             </div>
           </div>
 
-          <div className="mt-4 shrink-0 border-t border-border bg-panel/95 shadow-panel backdrop-blur-sm">
+          <div className="mt-4 shrink-0 border-t mobile:mt-2 border-border bg-panel/95 shadow-panel backdrop-blur-sm">
             <ChatComposer onSubmit={sendPrompt} isLoading={isStreaming} />
           </div>
         </div>

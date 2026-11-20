@@ -23,7 +23,7 @@ export function LogoutForm() {
   return (
     <form action="/api/auth/logout" method="post">
       <input type="hidden" name="client_origin" value={clientOrigin} />
-      <Button variant="secondary" type="submit">
+      <Button variant="secondary" type="submit" className="mobile:h-11 projector:h-11">
         Log out
       </Button>
     </form>
