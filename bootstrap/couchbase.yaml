@@ -29,4 +29,4 @@ spec:
       import:
         - scope: data
           collection: flights
-          file: /import/data.json   # JSON Lines mounted by docker-compose.yaml
+          file: /import/data.json
