@@ -1,0 +1,32 @@
+apiVersion: cbctl/v1
+kind: CouchbaseServer
+metadata:
+  name: agentmemory
+spec:
+  credentials:
+    username: Administrator
+    password: ${CBS_PASSWORD}
+  nodeDefaults:
+    services: [data, index, query, search]
+    ramGiB: 4
+  nodes:
+    - ipAddress: 127.0.0.1
+      externalIpAddress: couchbase-demo
+      primary: true
+  buckets:
+    - name: ams
+      quotaMiB: 128
+      replicas: 0
+      scopes:
+        - name: web
+          collections: [session]
+    - name: travel
+      quotaMiB: 128
+      replicas: 0
+      scopes:
+        - name: data
+          collections: [flights]
+      import:
+        - scope: data
+          collection: flights
+          file: /import/data.json
